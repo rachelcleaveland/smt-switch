@@ -492,6 +492,18 @@ UnorderedTermMap Z3Solver::get_array_values(const Term & arr,
       "Get array values not implemented for Z3 backend.");
 }
 
+void Z3Solver::get_assertions(TermVec & out)
+{
+  Z3_ast_vector vec = Z3_solver_get_assertions(ctx,slv);
+
+  for (size_t i = 0; i < Z3_ast_vector_size(ctx,vec); i++) 
+  {
+    z3::expr t = to_expr(ctx,Z3_ast_vector_get(ctx,vec,i));
+    Term t_term = std::make_shared<Z3Term>(t,ctx);
+    out.push_back(t_term);
+  }
+}
+
 void Z3Solver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   // in smt-switch, should throw exception if last query

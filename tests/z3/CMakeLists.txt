@@ -9,3 +9,4 @@ endmacro()
 # TODO move old tests to Google Test infrastructure
 switch_add_z3_test(z3_test)
 switch_add_z3_test(z3_full)
+switch_add_z3_test(z3_get_assertions)

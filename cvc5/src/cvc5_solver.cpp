@@ -433,6 +433,22 @@ UnorderedTermMap Cvc5Solver::get_array_values(const Term & arr,
   }
 }
 
+void Cvc5Solver::get_assertions(TermVec & out) 
+{
+  try
+  {
+    for (auto cterm : solver.getAssertions())
+    {
+      out.push_back(std::make_shared<Cvc5Term>(cterm));
+    }
+  }
+  catch(const std::exception& e)
+  {
+    throw InternalSolverException(e.what());
+  }
+  
+}
+
 void Cvc5Solver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   Term f;

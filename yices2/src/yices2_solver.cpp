@@ -448,6 +448,13 @@ UnorderedTermMap Yices2Solver::get_array_values(const Term & arr,
       "particular select of the array.");
 }
 
+void Yices2Solver::get_assertions(TermVec & out)
+{
+  throw NotImplementedException(
+      "get_assertions not yet supported for Yices."
+  );
+}
+
 void Yices2Solver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   term_vector_t ycore;

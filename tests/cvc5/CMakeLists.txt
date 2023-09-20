@@ -9,6 +9,7 @@ endmacro()
 # TODO move old tests to Google Test infrastructure
 switch_add_cvc5_test(cvc5-arrays)
 switch_add_cvc5_test(cvc5-data-structures)
+switch_add_cvc5_test(cvc5-get-assertions)
 switch_add_cvc5_test(cvc5-indexed-op-tests)
 switch_add_cvc5_test(cvc5-int-arithmetic)
 switch_add_cvc5_test(cvc5_test)

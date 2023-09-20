@@ -1116,6 +1116,12 @@ string GenericSolver::strip_value_from_result(string result) const
   return strip;
 }
 
+void GenericSolver::get_assertions(TermVec & out) 
+{
+  throw NotImplementedException(
+      "Generic solver does not yet support get-assertions");
+}
+
 void GenericSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   // run get-unsat-assumptions command

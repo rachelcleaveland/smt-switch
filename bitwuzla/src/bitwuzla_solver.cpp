@@ -197,6 +197,12 @@ UnorderedTermMap BzlaSolver::get_array_values(const Term & arr,
       "Bitwuzla backend doesn't support get_array_values yet");
 }
 
+void BzlaSolver::get_assertions(TermVec & out) {
+  throw NotImplementedException(
+      "Bitwuzla backend doesn't support get_assertions yet");
+}
+
+
 void BzlaSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   size_t size;

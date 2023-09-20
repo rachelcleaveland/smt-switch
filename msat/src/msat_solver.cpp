@@ -369,6 +369,12 @@ UnorderedTermMap MsatSolver::get_array_values(const Term & arr,
   return assignments;
 }
 
+void MsatSolver::get_assertions(TermVec & out)
+{
+  throw NotImplementedException(
+      "get_assertions not yet supported for MathSAT.");
+}
+
 void MsatSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   initialize_env();

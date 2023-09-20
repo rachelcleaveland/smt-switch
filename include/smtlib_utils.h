@@ -27,6 +27,7 @@ const std::string ASSERT_STR = "assert";
 const std::string CHECK_SAT_STR = "check-sat";
 const std::string CHECK_SAT_ASSUMING_STR = "check-sat-assuming";
 const std::string GET_VALUE_STR = "get-value";
+const std::string GET_ASSERTIONS_STR = "get-assertions";
 const std::string GET_UNSAT_ASSUMPTIONS_STR = "get-unsat-assumptions";
 const std::string PUSH_STR = "push";
 const std::string POP_STR = "pop";

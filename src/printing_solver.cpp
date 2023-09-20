@@ -196,6 +196,12 @@ Term PrintingSolver::get_value(const Term & t) const
   return wrapped_solver->get_value(t);
 }
 
+void PrintingSolver::get_assertions(TermVec & out)
+{
+  (*out_stream) << "(" << GET_ASSERTIONS_STR << ")" << end;
+  wrapped_solver->get_assertions(out);
+}
+
 void PrintingSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   (*out_stream) << "(" << GET_UNSAT_ASSUMPTIONS_STR << ")" << endl;

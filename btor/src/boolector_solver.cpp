@@ -478,6 +478,11 @@ UnorderedTermMap BoolectorSolver::get_array_values(const Term & arr,
   return assignments;
 }
 
+void BoolectorSolver::get_assertions(TermVec & out)
+{
+  throw NotImplementedException("get_assertions not supported in Boolector");
+}
+
 void BoolectorSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   BoolectorNode ** bcore = boolector_get_failed_assumptions(btor);

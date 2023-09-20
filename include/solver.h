@@ -113,6 +113,12 @@ class AbsSmtSolver
   virtual UnorderedTermMap get_array_values(const Term & arr,
                                             Term & out_const_base) const = 0;
 
+  /** This function will populate the 'assertions' TermVec with the current set
+   *  of all asserted formulas in the solver.
+   *  SMTLIB: (get-assertions)
+   */
+  virtual void get_assertions(TermVec & assertions) = 0;
+
   /** After a call to check_sat_assuming that returns an unsatisfiable result
    *  this function will populate the 'out' UnorderedTermSet with a subset
    *  of the assumption literals that are sufficient to make the assertions
