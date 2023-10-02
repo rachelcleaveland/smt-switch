@@ -117,7 +117,6 @@ const std::unordered_map<PrimOp, ::cvc5::Kind> primop2kind(
       { Apply_Constructor, ::cvc5::Kind::APPLY_CONSTRUCTOR } });
 
 /* Cvc5Solver implementation */
-
 void Cvc5Solver::set_opt(const std::string option, const std::string value)
 {
   std::string cvc5option = option;

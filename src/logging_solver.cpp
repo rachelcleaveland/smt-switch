@@ -288,7 +288,6 @@ Term LoggingSolver::make_term(const string name,
 Term LoggingSolver::make_term(const Term & val, const Sort & sort) const
 {
   LoggingTerm *lval = dynamic_cast<LoggingTerm *>(val.get());
-  //RachelsSharedPtr<LoggingTerm> lval = cast_ptr<LoggingTerm>(val);
   LoggingSort *lsort = dynamic_cast<LoggingSort*>(sort.get());
   Term wrapped_res =
       wrapped_solver->make_term(lval->wrapped_term, lsort->wrapped_sort);
@@ -374,7 +373,6 @@ Term LoggingSolver::make_param(const string name, const Sort & sort)
 Term LoggingSolver::make_term(const Op op, const Term & t) const
 {
   LoggingTerm *lt = dynamic_cast<LoggingTerm *>(t.get());
-  //RachelsSharedPtr<LoggingTerm> lt = cast_ptr<LoggingTerm>(t);
   Term wrapped_res = wrapped_solver->make_term(op, lt->wrapped_term);
   SortVec sorts = { t->get_sort() };
   Sort res_logging_sort = compute_sort(op, this, sorts);
@@ -403,9 +401,7 @@ Term LoggingSolver::make_term(const Op op,
                               const Term & t2) const
 {
   LoggingTerm *lt1 = dynamic_cast<LoggingTerm *>(t1.get());
-  //RachelsSharedPtr<LoggingTerm> lt1 = cast_ptr<LoggingTerm>(t1);
   LoggingTerm *lt2 = dynamic_cast<LoggingTerm *>(t2.get());
-  //RachelsSharedPtr<LoggingTerm> lt2 = cast_ptr<LoggingTerm>(t2);
   Term wrapped_res =
       wrapped_solver->make_term(op, lt1->wrapped_term, lt2->wrapped_term);
   Sort res_logging_sort =
