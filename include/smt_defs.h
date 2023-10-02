@@ -21,14 +21,14 @@
 namespace smt {
 
 struct Op;
-
-class AbsSort;
-using Sort = std::shared_ptr<AbsSort>;
-
-class AbsTerm;
 template <typename T>
 class RachelsSharedPtr;
-using Term = RachelsSharedPtr<AbsTerm>; //std::shared_ptr<AbsTerm>;
+
+class AbsSort;
+using Sort = std::shared_ptr<AbsSort>; // RachelsSharedPtr<AbsSort>; //
+
+class AbsTerm;
+using Term = RachelsSharedPtr<AbsTerm>;
 //using Term = std::shared_ptr<AbsTerm>;
 
 class AbsSmtSolver;

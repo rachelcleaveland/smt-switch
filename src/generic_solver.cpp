@@ -64,6 +64,25 @@ std::string & trim(std::string & str)
   return str;
 }
 
+Term make_shared_term(Sort sort, Op op, TermVec t, std::string name) {
+  //TermTest r = TestClass<GenericTerm>(t[0].get()); 
+  return (RachelsSharedPtr<GenericTerm>(sort,op,t,name)).cast_shared_pointer<AbsTerm>(); 
+  //return std::make_shared<Cvc5Term>(t);
+}
+
+Term make_shared_term(Sort sort, Op op, TermVec t, std::string name, bool b) {
+  return (RachelsSharedPtr<GenericTerm>(sort,op,t,name,b)).cast_shared_pointer<AbsTerm>(); 
+  //return std::make_shared<Cvc5Term>(t);
+}
+
+/*
+RachelsSharedPtr<GenericTerm> cast_ptr(Term t) {
+  return t.cast_shared_pointer<GenericTerm>();
+  //return std::static_pointer_cast<Cvc5Term>(t);
+
+}
+*/
+
 // class methods implementation
 GenericSolver::GenericSolver(string path,
                              vector<string> cmd_line_args,
@@ -324,7 +343,7 @@ void GenericSolver::define_fun(std::string name,
 std::string GenericSolver::to_smtlib_def(Term term) const
 {
   // cast to generic term
-  shared_ptr<GenericTerm> gt = static_pointer_cast<GenericTerm>(term);
+  RachelsSharedPtr<GenericTerm> gt = cast_ptr<GenericTerm>(term);
   bool nullary_constructor = false;
   // generic terms with no operators are represented by their
   // name.
@@ -655,7 +674,7 @@ Term GenericSolver::get_constructor(const Sort & s, std::string name) const
   }
   Sort cons_sort = make_generic_sort(CONSTRUCTOR, name, s);
   Term new_term =
-      std::make_shared<GenericTerm>(cons_sort, Op(), TermVec{}, name, true);
+      make_shared_term(cons_sort, Op(), TermVec{}, name, true);
   (*name_term_map)[name] = new_term;
   (*term_name_map)[new_term] = name;
   return (*name_term_map)[name];
@@ -685,7 +704,7 @@ Term GenericSolver::get_tester(const Sort & s, std::string name) const
 
   Sort cons_sort = make_generic_sort(TESTER, name, s);
   Term new_term =
-      std::make_shared<GenericTerm>(cons_sort, Op(), TermVec{}, name, true);
+      make_shared_term(cons_sort, Op(), TermVec{}, name, true);
   (*name_term_map)[name] = new_term;
   (*term_name_map)[new_term] = name;
   return (*name_term_map)[name];
@@ -721,7 +740,7 @@ Term GenericSolver::get_selector(const Sort & s, std::string con, std::string na
     throw InternalSolverException("Selector not in datatype");
   }
   Term new_term =
-      std::make_shared<GenericTerm>(cons_sort, Op(), TermVec{}, name, true);
+      make_shared_term(cons_sort, Op(), TermVec{}, name, true);
   (*name_term_map)[name] = new_term;
   (*term_name_map)[new_term] = name;
   return (*name_term_map)[name];
@@ -738,9 +757,9 @@ std::string GenericSolver::get_name(Term term) const
 Term GenericSolver::store_term(Term term) const
 {
   // cast the term to a GenericTerm
-  shared_ptr<GenericTerm> gterm = static_pointer_cast<GenericTerm>(term);
+  RachelsSharedPtr<GenericTerm> gterm = cast_ptr<GenericTerm>(term);
   // store the term in the maps in case it is not there already
-  if (term_name_map->find(gterm) == term_name_map->end())
+  if (term_name_map->find(term) == term_name_map->end())
   {
     string name;
     // ground terms are communicated to the binary
@@ -759,18 +778,18 @@ Term GenericSolver::store_term(Term term) const
     // In future instances, the entire definition will be used.
     if (gterm->is_ground())
     {
-      name = get_name(gterm);
-      define_fun(name, SortVec{}, gterm->get_sort(), gterm);
+      name = get_name(term);
+      define_fun(name, SortVec{}, gterm->get_sort(), term);
     }
     else
     {
-      name = to_smtlib_def(gterm);
+      name = to_smtlib_def(term);
     }
-    (*name_term_map)[name] = gterm;
-    (*term_name_map)[gterm] = name;
+    (*name_term_map)[name] = term;
+    (*term_name_map)[term] = name;
   }
   // return the term from the internal map
-  string name = (*term_name_map)[gterm];
+  string name = (*term_name_map)[term];
   return (*name_term_map)[name];
 }
 
@@ -779,7 +798,7 @@ Term GenericSolver::make_non_negative_bv_const(string abs_decimal,
 {
   Sort bvsort = make_sort(BV, width);
   string repr = "(_ bv" + abs_decimal + " " + std::to_string(width) + ")";
-  Term term = std::make_shared<GenericTerm>(bvsort, Op(), TermVec{}, repr);
+  Term term = make_shared_term(bvsort, Op(), TermVec{}, repr);
   return term;
 }
 
@@ -813,7 +832,7 @@ Term GenericSolver::make_value(bool b) const
 {
   // create a generic term that represents `b`.
   Sort boolsort = make_sort(BOOL);
-  Term term = std::make_shared<GenericTerm>(
+  Term term = make_shared_term(
       boolsort, Op(), TermVec{}, b ? "true" : "false");
   return term;
 }
@@ -831,7 +850,7 @@ Term GenericSolver::make_value(int64_t i, const Sort & sort) const
   if (sk == INT || sk == REAL)
   {
     string repr = std::to_string(i);
-    Term term = std::make_shared<GenericTerm>(sort, Op(), TermVec{}, repr);
+    Term term = make_shared_term(sort, Op(), TermVec{}, repr);
     return term;
   }
   else
@@ -871,7 +890,7 @@ Term GenericSolver::make_value(const string val,
   {
     assert(base == 10);
     repr = val;
-    Term term = std::make_shared<GenericTerm>(sort, Op(), TermVec{}, repr);
+    Term term = make_shared_term(sort, Op(), TermVec{}, repr);
     return term;
   }
   else
@@ -900,7 +919,7 @@ Term GenericSolver::make_value(const string val,
       {
         repr = "#x" + val;
       }
-      Term term = std::make_shared<GenericTerm>(sort, Op(), TermVec{}, repr);
+      Term term = make_shared_term(sort, Op(), TermVec{}, repr);
       return term;
     }
   }
@@ -918,7 +937,7 @@ Term GenericSolver::make_term(const Term & val, const Sort & sort) const
 {
   assert(sort->get_sort_kind() == ARRAY);
   assert(sort->get_elemsort() == val->get_sort());
-  Term term = std::make_shared<GenericTerm>(
+  Term term = make_shared_term(
       sort, Op(), TermVec{ val }, cons_arr_string(val, sort));
   return store_term(term);
 }
@@ -938,7 +957,7 @@ Term GenericSolver::make_symbol(const string name, const Sort & sort)
 
   // create the sumbol and store it in the maps
   Term term =
-      std::make_shared<GenericTerm>(sort, Op(), TermVec{}, piped_name, true);
+      make_shared_term(sort, Op(), TermVec{}, piped_name, true);
   (*name_term_map)[piped_name] = term;
   (*term_name_map)[term] = piped_name;
 
@@ -974,7 +993,7 @@ Term GenericSolver::make_param(const string name, const Sort & sort)
         string("param name: ") + name
         + string(" already taken, either by another param or by a symbol"));
   }
-  Term term = std::make_shared<GenericTerm>(sort, Op(), TermVec{}, name, false);
+  Term term = make_shared_term(sort, Op(), TermVec{}, name, false);
   (*name_term_map)[name] = term;
   (*term_name_map)[term] = name;
   return (*name_term_map)[name];
@@ -1010,7 +1029,7 @@ Term GenericSolver::make_term(const Op op, const TermVec & terms) const
     repr += " " + (*term_name_map)[terms[i]];
   }
   repr += ")";
-  Term term = std::make_shared<GenericTerm>(sort, op, terms, repr);
+  Term term = make_shared_term(sort, op, terms, repr);
   Term stored_term = store_term(term);
   return stored_term;
 }
@@ -1258,11 +1277,11 @@ void GenericSolver::set_logic(const std::string logic)
 void GenericSolver::assert_formula(const Term & t)
 {
   // cast to generic term, as we need to print it to the solver
-  shared_ptr<GenericTerm> lt = static_pointer_cast<GenericTerm>(t);
+  RachelsSharedPtr<GenericTerm> lt = cast_ptr<GenericTerm>(t);
 
   // obtain the name of the term from the internal map
-  assert(term_name_map->find(lt) != term_name_map->end());
-  string name = (*term_name_map)[lt];
+  assert(term_name_map->find(t) != term_name_map->end());
+  string name = (*term_name_map)[t];
 
   // communicate the assertion to the binary of the solver
   run_command("(" + ASSERT_STR + " " + name + ")");

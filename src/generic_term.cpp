@@ -54,7 +54,7 @@ bool GenericTerm::compute_ground()
   // is not ground.
   for (Term child : get_children())
   {
-    shared_ptr<GenericTerm> gc = static_pointer_cast<GenericTerm>(child);
+    RachelsSharedPtr<GenericTerm> gc = child.cast_shared_pointer<GenericTerm>();
     // This is not a recursive call -- is_ground is
     // just a getter. Their `ground` member
     // was initialized upon their construction.
@@ -87,7 +87,7 @@ bool GenericTerm::compare(const Term & t) const
     // The null term is different than any constructed term.
     return false;
   }
-  shared_ptr<GenericTerm> gt = static_pointer_cast<GenericTerm>(t);
+  RachelsSharedPtr<GenericTerm> gt = t.cast_shared_pointer<GenericTerm>();
   // The comparison is based on a string comparison
   return repr == gt->to_string();
 }

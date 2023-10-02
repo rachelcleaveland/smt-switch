@@ -1,5 +1,5 @@
 /*********************                                                        */
-/*! \file term.h
+/*! \file ptr.h
 ** \verbatim
 ** Top contributors (to current version):
 **   Makai Mann, Clark Barrett
@@ -9,7 +9,7 @@
 ** All rights reserved.  See the file LICENSE in the top-level source
 ** directory for licensing information.\endverbatim
 **
-** \brief Abstract interface for SMT terms.
+** \brief Abstract interface for SMT ptrs.
 **
 **
 **/
@@ -33,32 +33,32 @@ namespace smt {
 
 class TermIter;
 
-// Abstract class for term
+// Abstract class for ptr
 class AbsTerm
 {
  public:
   AbsTerm(){};
   virtual ~AbsTerm(){};
-  /** Returns a hash for this term */
+  /** Returns a hash for this ptr */
   virtual std::size_t hash() const = 0;
-  /** Returns a unique id for this term */
+  /** Returns a unique id for this ptr */
   virtual std::size_t get_id() const = 0;
-  /* Should return true iff the terms are identical */
-  virtual bool compare(const Term& absterm) const = 0;
+  /* Should return true iff the ptrs are identical */
+  virtual bool compare(const Term& absptr) const = 0;
   // Term methods
-  /* get the Op used to create this term */
+  /* get the Op used to create this ptr */
   virtual Op get_op() const = 0;
   /* get the sort */
   virtual Sort get_sort() const = 0;
   /* to_string in smt2 format */
   virtual std::string to_string() = 0;
-  /* returns true iff this term is a symbol */
+  /* returns true iff this ptr is a symbol */
   virtual bool is_symbol() const = 0;
-  /* returns true iff this term is a parameter (to be bound by a quantifier) */
+  /* returns true iff this ptr is a parameter (to be bound by a quantifier) */
   virtual bool is_param() const = 0;
-  /* returns true iff this term is a symbolic constant */
+  /* returns true iff this ptr is a symbolic constant */
   virtual bool is_symbolic_const() const = 0;
-  /* returns true iff this term is an interpreted constant */
+  /* returns true iff this ptr is an interpreted constant */
   virtual bool is_value() const = 0;
   /** converts a constant that can be represented as an int to an int
    *  otherwise, throws an IncorrectUsageException
@@ -75,7 +75,7 @@ class AbsTerm
 
   // Methods used for strange edge-cases e.g. in the logging solver
 
-  /** Print a value term in a specific form
+  /** Print a value ptr in a specific form
    *  NOTE: this *only* exists for use in LoggingSolver
    *        it is to handle printing of values from solvers that alias
    *        sorts. For example, if Bool and (_ BitVec 1) are aliased,
@@ -87,104 +87,64 @@ class AbsTerm
    *  Thus, solvers that don't alias sorts can just use their to_string
    *  to implement this method
    *
-   *  @param sk the SortKind to print the term as
-   *  @param a string representation of the term
+   *  @param sk the SortKind to print the ptr as
+   *  @param a string representation of the ptr
    *
-   *  throws an exception if the term is not a value
+   *  throws an exception if the ptr is not a value
    */
   virtual std::string print_value_as(SortKind sk) = 0;
 };
 
+
+template <typename T>
+class TestClass
+{
+  public:
+  TestClass(T *t) : test(t) {}
+
+  private:
+  T *test;
+
+};
+
 /**
- * This is a TermValue.
+ * This is a PtrValue.
  */
 template <typename T>
-class TermValue
+class PtrValue
 {
 
-  friend class RachelsSharedPtr<AbsTerm>;
-  friend class RefCountGuard;
+  friend class RachelsSharedPtr<T>;
 
-  /* ------------------------------------------------------------------------ */
  public:
-  /* ------------------------------------------------------------------------ */
+  PtrValue() : d_ptr(nullptr), d_rc(1) {}
 
-  using nv_iterator = TermValue**;
-  using const_nv_iterator = TermValue const* const*;
-
-  TermValue(T t) : d_term(t), d_rc(1) {}
+  PtrValue(T t) : d_ptr(new T(t)), d_rc(1) {}
 
   /**
    * Constructor for GenericTerm.
    */ 
-  TermValue(Sort sort, Op op, std::vector<Term> t, std::string name) 
-    : d_term(new T(sort,op,t,name)), d_rc(1) {}
+  PtrValue(Sort sort, Op op, std::vector<Term> t, std::string name) 
+    : d_ptr(new T(sort,op,t,name)), d_rc(1) {}
 
   /**
    * Constructor for GenericTerm.
    */ 
-  TermValue(Sort sort, Op op, std::vector<Term> t, std::string name, bool b) 
-    : d_term(new T(sort,op,t,name,b)), d_rc(1) {}
+  PtrValue(Sort sort, Op op, std::vector<Term> t, std::string name, bool b) 
+    : d_ptr(new T(sort,op,t,name,b)), d_rc(1) {}
 
-/*
-  template <class T>
-  class iterator
-  {
-   public:
-    using iterator_category = std::random_access_iterator_tag;
-    using value_type = T;
-    using difference_type = std::ptrdiff_t;
-    using pointer = T*;
-    using reference = T;
+  /**
+   * Constructor for LoggingTerm.
+   */ 
+  PtrValue(std::vector<Term>  t, Sort s, Op op, std::vector<Term> tv, size_t id)
+   : d_ptr(new T(t[0],s,op,tv,id)), d_rc(1) {}
 
-    iterator() : d_i(NULL) {}
-    explicit iterator(const_nv_iterator i) : d_i(i) {}
+  /**
+   * Constructor for LoggingTerm.
+   */ 
+  PtrValue(std::vector<Term>  t, Sort s, Op op, std::vector<Term> tv, std::string n, bool b, size_t id)
+   : d_ptr(new T(t[0],s,op,tv,n,b,id)), d_rc(1) {}
 
-    T operator*() const { return T(*d_i); }
-
-    bool operator==(const iterator& i) const { return d_i == i.d_i; }
-
-    bool operator!=(const iterator& i) const { return d_i != i.d_i; }
-
-    iterator& operator++()
-    {
-      ++d_i;
-      return *this;
-    }
-
-    iterator operator++(int) { return iterator(d_i++); }
-
-    iterator& operator--()
-    {
-      --d_i;
-      return *this;
-    }
-
-    iterator operator--(int) { return iterator(d_i--); }
-
-    iterator& operator+=(difference_type p)
-    {
-      d_i += p;
-      return *this;
-    }
-
-    iterator& operator-=(difference_type p)
-    {
-      d_i -= p;
-      return *this;
-    }
-
-    iterator operator+(difference_type p) { return iterator(d_i + p); }
-
-    iterator operator-(difference_type p) { return iterator(d_i - p); }
-
-    difference_type operator-(iterator i) { return d_i - i.d_i; }
-
-   private:
-    const_nv_iterator d_i;
-
-  }; /* class TermValue::iterator<T> 
-*/
   /* ------------------------------ Header ---------------------------------- */
   /** Number of bits reserved for reference counting. */
   static constexpr uint32_t NBITS_REFCOUNT = 20;
@@ -193,77 +153,27 @@ class TermValue
 
   uint32_t getRefCount() const { return d_rc; }
 
-  //template <typename T>
-  //inline iterator<T> begin() const;
-  //template <typename T>
-  //inline iterator<T> end() const;
-
-  /* ------------------------------------------------------------------------ */
  private:
-  /* ------------------------------------------------------------------------ */
-
-  /**
-   * RAII guard that increases the reference count if the reference count to be
-   * > 0.  Otherwise, this does nothing. This does not just increment the
-   * reference count to avoid maxing out the d_rc field. This is only for low
-   * level functions.
-   */
-  class RefCountGuard
-  {
-   public:
-    RefCountGuard(const TermValue* nv) : d_nv(const_cast<TermValue*>(nv))
-    {
-      d_increased = (d_nv->d_rc == 0);
-      if (d_increased)
-      {
-        d_nv->d_rc = 1;
-      }
-    }
-    ~RefCountGuard()
-    {
-      // dec() without marking for deletion: we don't want to garbage
-      // collect this TermValue if ours is the last reference to it.
-      // E.g., this can happen when debugging code calls the print
-      // routines below.  As RefCountGuards are scoped on the stack,
-      // this should be fine---but not in multithreaded contexts!
-      if (d_increased)
-      {
-        --d_nv->d_rc;
-      }
-    }
-
-   private:
-    TermValue* d_nv;
-    bool d_increased;
-  }; /* TermValue::RefCountGuard */
 
   /** Maximum reference count possible.  Used for sticky
    *  reference-counting.  Should be (1 << num_bits(d_rc)) - 1 */
   static constexpr uint32_t MAX_RC =
       (static_cast<uint32_t>(1) << NBITS_REFCOUNT) - 1;
 
-
-  /** Uninitializing constructor for NodeBuilder's use.  */
-  TermValue()
-  { /* do not initialize! */
-  }
   /** Private constructor for the null value. */
-  TermValue(int);
+  PtrValue(int);
 
   /**
    * Destructor. 
    */
-  ~TermValue() {
-    dec();
-    if (d_rc == 0) {
-      delete(d_term);
-    }
-  }
+  //~PtrValue() {
+  //  dec();
+  //}
 
   void inc()
   {
     assert(!isBeingDeleted());
-        //<< "TermValue is currently being deleted "
+        //<< "PtrValue is currently being deleted "
         //   "and increment is being called on it. Don't Do That!";
     // FIXME multithreading
     if (__builtin_expect((d_rc < MAX_RC - 1), true))
@@ -273,7 +183,7 @@ class TermValue
     else if (__builtin_expect((d_rc == MAX_RC - 1), false))
     {
       ++d_rc;
-      markRefCountMaxedOut();
+      //markRefCountMaxedOut();
     }
   }
 
@@ -290,128 +200,187 @@ class TermValue
     }
   }
 
-  void markRefCountMaxedOut();
-  void markForDeletion();
+  //void markRefCountMaxedOut();
+  void markForDeletion() {
+    delete(d_ptr);
+  }
 
-  bool isBeingDeleted() const;
+  bool isBeingDeleted() const {
+    return false;
+  }
 
   /** Returns true if the reference count is maximized. */
   inline bool HasMaximizedReferenceCount() { return d_rc == MAX_RC; }
 
-  nv_iterator nv_begin();
-  nv_iterator nv_end();
-
-  const_nv_iterator nv_begin() const;
-  const_nv_iterator nv_end() const;
-
   /** The expression */
-  T *d_term;
+  T *d_ptr;
 
   /** The expression's reference count. */
   uint32_t d_rc : NBITS_REFCOUNT;
 
-}; /* class TermValue */
+}; /* class PtrValue */
 
 
 
 template <typename T>
 class RachelsSharedPtr {
 
-  /** The referenced TermValue */
-  TermValue<T>* d_nv;
+  friend class PtrValue<T>;
+
+  /** The referenced PtrValue */
+  PtrValue<T> *d_nv;
 
 public:
 
- /** 
-  * Default constructor, makes a null expression.
-  */
- RachelsSharedPtr() : d_nv(nullptr) {}
+  bool nullPtr() const {
+    return !(d_nv->d_ptr);
+  }
 
- /**
-  * Constructor taking an AbsTerm. 
-  */
- RachelsSharedPtr(T term) : d_nv(new TermValue<T>(term)) {}
-
- /**
-  * Copy constructor.
-  * @param term the term to make copy of
-  */
- RachelsSharedPtr(const RachelsSharedPtr& term) : d_nv(term.d_nv) {}
+  /** 
+    * Default constructor, makes a null expression.
+    */
+  RachelsSharedPtr() : d_nv(new PtrValue<T>()) {}
 
   /**
-   * Constructor for GenericTerm
+    * Constructor taking an AbsTerm. 
+    */
+  RachelsSharedPtr(T ptr) : d_nv(new PtrValue<T>(ptr)) {
+    std::cout << "Calling constructor for (T ptr) in RachelsSharedPointer" << std::endl;
+    std::cout << "  d_nv->d_ptr = " << reinterpret_cast<void *>(d_nv->d_ptr) << std::endl;
+    std::cout << "  d_rc = " << d_nv->d_rc << std::endl; 
+  }
+
+  /**
+   * Constructor used in casting function, taking a PtrValue.
+   */
+  RachelsSharedPtr(PtrValue<T>* tv) : d_nv(tv) {
+    std::cout << "Calling constructor for (PtrValue<T>* tv) in RachelsSharedPointer" << std::endl;
+    std::cout << "  d_nv->d_ptr = " << reinterpret_cast<void *>(d_nv->d_ptr) << std::endl;
+    std::cout << "  d_rc = " << d_nv->d_rc << std::endl; 
+
+    d_nv->inc();
+  }
+
+  /**
+    * Copy constructor.
+    * @param ptr the ptr to make copy of
+    */
+  RachelsSharedPtr(const RachelsSharedPtr& ptr) : d_nv(ptr.d_nv) {
+    //std::cout << "Copy constructor called" << std::endl;
+    d_nv->inc();
+  }
+
+  /**
+   * Constructor for GenericTerm.
    */
   RachelsSharedPtr(Sort sort, Op op, std::vector<Term> t, std::string name)
-   : d_nv(new TermValue<T>(sort,op,t,name)) {}
+   : d_nv(new PtrValue<T>(sort,op,t,name)) {}
 
   /**
-   * Constructor for GenericTerm
+   * Constructor for GenericTerm.
    */
   RachelsSharedPtr(Sort sort, Op op, std::vector<Term> t, std::string name, bool b)
-   : d_nv(new TermValue<T>(sort,op,t,name,b)) {}
+   : d_nv(new PtrValue<T>(sort,op,t,name,b)) {}
+
+  /**
+   * Constructor for LoggingTerm.
+   */
+  RachelsSharedPtr(std::vector<Term>  t, Sort s, Op op, std::vector<Term> tv, size_t id)
+   : d_nv(new PtrValue<T>(t,s,op,tv,id)) {}
+
+  /**
+   * Constructor for LoggingTerm.
+   */
+  RachelsSharedPtr(std::vector<Term>  t, Sort s, Op op, std::vector<Term> tv, std::string n, bool b, size_t id)
+   : d_nv(new PtrValue<T>(t,s,op,tv,n,b,id)) {}
 
   /**
     * Destructor. 
     */
   ~RachelsSharedPtr() {
-    d_nv->~TermValue();
+    d_nv->dec(); //->~PtrValue();
   }
 
  /**
-  * Assignment operator for terms, copies the relevant information from term
-  * to this term.
-  * @param term the term to copy
-  * @return reference to this term
+  * Assignment operator for ptrs, copies the relevant information from ptr
+  * to this ptr.
+  * @param ptr the ptr to copy
+  * @return reference to this ptr
   */
- RachelsSharedPtr& operator=(const RachelsSharedPtr& term) {
-  assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
-  assert (term.d_nv != NULL); // << "Expecting a non-NULL expression value on RHS!";
-  if(__builtin_expect( ( d_nv != term.d_nv ), true )) {
-    assert (d_nv->d_rc > 0); // << "term reference count would be negative";
-    d_nv->dec();
-    d_nv = term.d_nv;
+  RachelsSharedPtr& operator=(const RachelsSharedPtr& ptr) {
+    assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
+    assert (ptr.d_nv != NULL); // << "Expecting a non-NULL expression value on RHS!";
+    if(__builtin_expect( ( d_nv != ptr.d_nv ), true )) {
+      assert (d_nv->d_rc > 0); // << "ptr reference count would be negative";
+      d_nv->dec();
+      d_nv = ptr.d_nv;
 
-    assert (d_nv->d_rc > 0); // << "term assigned from term with rc == 0";
-    d_nv->inc();
+      //std::cout << "ptr.d_rc = " << ptr.d_nv->d_rc << std::endl;
 
+      assert (d_nv->d_rc > 0); // << "ptr assigned from ptr with rc == 0";
+      d_nv->inc();
+
+    }
+    return *this;
   }
-  return *this;
- }
 
  /**
-  * Casts the TermValue pointed to by d_nv.
+  * Casts the PtrValue pointed to by d_nv.
   */
- template <typename T_n>
- RachelsSharedPtr& cast_shared_pointer() {
-  d_nv->d_term = static_cast<T_n>(d_nv->d_term);
- }
+  template <typename T_n>
+  RachelsSharedPtr<T_n> cast_shared_pointer() const {
+    PtrValue<T_n>* nv = (PtrValue<T_n>*)(d_nv);
+    return RachelsSharedPtr<T_n>(nv);
+    //d_nv->d_ptr = static_cast<T_n*>(d_nv->d_ptr);
+  }
 
   /**
    * Dereferencing operators.
    */
   T *operator->() const {
-    return d_nv->d_term;
+    return d_nv->d_ptr;
   }
 
   T &operator*() const {
-    return *d_nv->d_term;
+    return *d_nv->d_ptr;
   }
 
   T *get() const {
-    return d_nv->d_term;
+    return d_nv->d_ptr;
+  }
+
+  /**
+   * Logical operators
+   */
+  operator bool() const {
+    return d_nv->d_ptr != 0;
+  }
+
+  bool operator!() const {
+    return !d_nv->d_ptr;
   }
 
   /**
    * Returns the i-th element.
    * @param i the index of the child
-   * @return the i-th term
+   * @return the i-th ptr
    */
   T &operator[](int i) const {
-    return d_nv->d_term[i];
+    return d_nv->d_ptr[i];
   }
 
 
 };/* class RachelsSharedPtr */
+
+/**
+ * Casts a Term to a specific type of shared pointer.
+ */
+template <typename T>
+RachelsSharedPtr<T> cast_ptr(Term t) {
+  return t.cast_shared_pointer<T>();
+  //return std::static_pointer_cast<Cvc5Term>(t);
+
+}
 
 /*
 RachelsSharedPtr& RachelsSharedPtr::
@@ -419,11 +388,11 @@ operator=(const RachelsSharedPtr& e) {
   assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
   assert (e.d_nv != NULL); // << "Expecting a non-NULL expression value on RHS!";
   if(__builtin_expect( ( d_nv != e.d_nv ), true )) {
-    assert (d_nv->d_rc > 0); // << "term reference count would be negative";
+    assert (d_nv->d_rc > 0); // << "ptr reference count would be negative";
     d_nv->dec();
     d_nv = e.d_nv;
 
-    assert (d_nv->d_rc > 0); // << "term assigned from term with rc == 0";
+    assert (d_nv->d_rc > 0); // << "ptr assigned from ptr with rc == 0";
     d_nv->inc();
 
   }
@@ -436,6 +405,12 @@ inline bool operator==(const Term & t1, const Term & t2)
 }
 inline bool operator!=(const Term & t1, const Term & t2)
 {
+  if (t1.nullPtr()) {
+    return !t2.nullPtr();
+  }
+  if (t2.nullPtr()) {
+    return !t1.nullPtr();
+  }
   return !t1->compare(t2);
 }
 inline bool operator<(const Term & t1, const Term & t2)
@@ -457,7 +432,7 @@ inline bool operator>=(const Term & t1, const Term & t2)
 
 std::ostream& operator<<(std::ostream& output, const Term t);
 
-// term iterators
+// ptr iterators
 // impelementation based on
 // https://www.codeproject.com/Articles/92671/How-to-write-abstract-iterators-in-Cplusplus
 class TermIterBase
@@ -479,7 +454,7 @@ class TermIter
  public:
   // typedefs for marking as an input iterator
   // based on iterator_traits: https://en.cppreference.com/w/cpp/iterator/iterator_traits
-  // used by the compiler for statements such as: TermVec children(term->begin(), term->end())
+  // used by the compiler for statements such as: TermVec children(ptr->begin(), ptr->end())
   typedef Term value_type;
   typedef std::ptrdiff_t difference_type;
   typedef Term * pointer;

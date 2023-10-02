@@ -118,6 +118,14 @@ const std::unordered_map<::cvc5::Kind, PrimOp> kind2primop(
 // struct for hashing
 std::hash<cvc5::Term> termhash;
 
+/**
+ * Makes a shared pointer from a term.
+ */
+Term make_shared_term(cvc5::Term t) {
+  return (RachelsSharedPtr<Cvc5Term>(t)).cast_shared_pointer<AbsTerm>(); 
+  //return std::make_shared<Cvc5Term>(t);
+}
+
 /* Cvc5TermIter implementation */
 Cvc5TermIter & Cvc5TermIter::operator=(const Cvc5TermIter & it)
 {
@@ -133,7 +141,7 @@ const Term Cvc5TermIter::operator*()
   if (pos == term.getNumChildren()
       && term.getKind() == ::cvc5::Kind::CONST_ARRAY)
   {
-    return std::make_shared<Cvc5Term>(term.getConstArrayBase());
+    return make_shared_term(term.getConstArrayBase());
   }
   // special-case for VARIABLE_LIST -- parameters bound by a quantifier
   // smt-switch cvc5 backend guarantees that the length is only one by
@@ -149,9 +157,9 @@ const Term Cvc5TermIter::operator*()
       throw InternalSolverException(
           "Expected exactly one bound variable in cvc5 VARIABLE_LIST");
     }
-    return std::make_shared<Cvc5Term>(t[0]);
+    return make_shared_term(t[0]);
   }
-  return std::make_shared<Cvc5Term>(t);
+  return make_shared_term(t);
 }
 
 TermIterBase * Cvc5TermIter::clone() const
@@ -185,7 +193,7 @@ std::size_t Cvc5Term::get_id() const { return term.getId(); }
 
 bool Cvc5Term::compare(const Term & absterm) const
 {
-  std::shared_ptr<Cvc5Term> other = std::static_pointer_cast<Cvc5Term>(absterm);
+  RachelsSharedPtr<Cvc5Term> other = cast_ptr<Cvc5Term>(absterm);
   return term == other->term;
 }
 

@@ -57,6 +57,7 @@ TEST_P(UnitTestsHashTable, HashTable)
   Term fxeqxp1 = s->make_term(Equal, fx, xp1);
 
   Term xp1_2 = s->make_term(BVAdd, x, one);
+  //Z3Term xp1_2_t = xp1_2.get();
   Term cp_xp1_2 = xp1_2;
   ASSERT_EQ(xp1_2.use_count(), 2);
   ASSERT_EQ(cp_xp1_2.use_count(), 2);

@@ -82,4 +82,6 @@ class Cvc5Term : public AbsTerm
   friend class cvc5InterpolatingSolver;
 };
 
+Term make_shared_term(cvc5::Term t);
+
 }  // namespace smt

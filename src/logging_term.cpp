@@ -87,7 +87,7 @@ bool LoggingTerm::compare(const Term & t) const
     return false;
   }
 
-  shared_ptr<LoggingTerm> lt = static_pointer_cast<LoggingTerm>(t);
+  RachelsSharedPtr<LoggingTerm> lt = t.cast_shared_pointer<LoggingTerm>();
 
   // compare wrapped term and the LoggingSort
   // this handles values (e.g. null operators and no children)
