@@ -1214,6 +1214,9 @@ DisjointSet::~DisjointSet() {}
 
 void DisjointSet::add(const Term & a, const Term & b)
 {
+  std::cout << "util.cpp: add" << std::endl;
+  std::cout << "util.cpp: term = " << a << ", " << b << std::endl;
+  std::cout << "leader_.find(b): " << (leader_.find(b) != leader_.end()) << std::endl;
   if (leader_.find(a) != leader_.end())
   {
     Term leadera = leader_.at(a);

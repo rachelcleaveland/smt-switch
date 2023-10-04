@@ -189,7 +189,9 @@ TermIter LoggingTerm::end()
 
 // dispatched to underlying term
 
-size_t LoggingTerm::hash() const { return wrapped_term->hash(); }
+size_t LoggingTerm::hash() const { 
+  std::cout << "logging_term.cpp: hash" << std::endl;
+  return wrapped_term->hash(); }
 
 // check if op is null because a non-value
 // may have been simplified to a value by the underlying solver

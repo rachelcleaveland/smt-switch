@@ -193,7 +193,9 @@ std::size_t Cvc5Term::get_id() const { return term.getId(); }
 
 bool Cvc5Term::compare(const Term & absterm) const
 {
+  std::cout << "cvc5_term.cpp: compare" << std::endl;
   RachelsSharedPtr<Cvc5Term> other = cast_ptr<Cvc5Term>(absterm);
+  std::cout << "cvc5_term.cpp: compare 2" << std::endl;
   return term == other->term;
 }
 

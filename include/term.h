@@ -31,6 +31,7 @@
 
 namespace smt {
 
+
 class TermIter;
 
 // Abstract class for ptr
@@ -202,7 +203,7 @@ class PtrValue
 
   //void markRefCountMaxedOut();
   void markForDeletion() {
-    delete(d_ptr);
+    //delete(d_ptr);
   }
 
   bool isBeingDeleted() const {
@@ -245,18 +246,18 @@ public:
     * Constructor taking an AbsTerm. 
     */
   RachelsSharedPtr(T ptr) : d_nv(new PtrValue<T>(ptr)) {
-    std::cout << "Calling constructor for (T ptr) in RachelsSharedPointer" << std::endl;
-    std::cout << "  d_nv->d_ptr = " << reinterpret_cast<void *>(d_nv->d_ptr) << std::endl;
-    std::cout << "  d_rc = " << d_nv->d_rc << std::endl; 
+    //std::cout << "Calling constructor for (T ptr) in RachelsSharedPointer" << std::endl;
+    //std::cout << "  d_nv->d_ptr = " << reinterpret_cast<void *>(d_nv->d_ptr) << std::endl;
+    //std::cout << "  d_rc = " << d_nv->d_rc << std::endl; 
   }
 
   /**
    * Constructor used in casting function, taking a PtrValue.
    */
   RachelsSharedPtr(PtrValue<T>* tv) : d_nv(tv) {
-    std::cout << "Calling constructor for (PtrValue<T>* tv) in RachelsSharedPointer" << std::endl;
-    std::cout << "  d_nv->d_ptr = " << reinterpret_cast<void *>(d_nv->d_ptr) << std::endl;
-    std::cout << "  d_rc = " << d_nv->d_rc << std::endl; 
+    //std::cout << "Calling constructor for (PtrValue<T>* tv) in RachelsSharedPointer" << std::endl;
+    //std::cout << "  d_nv->d_ptr = " << reinterpret_cast<void *>(d_nv->d_ptr) << std::endl;
+    //std::cout << "  d_rc = " << d_nv->d_rc << std::endl; 
 
     d_nv->inc();
   }
@@ -299,6 +300,10 @@ public:
     */
   ~RachelsSharedPtr() {
     d_nv->dec(); //->~PtrValue();
+
+    //if (d_nv->d_rc == 0) {
+    //  delete(d_nv);
+    //}
   }
 
  /**
@@ -347,6 +352,14 @@ public:
 
   T *get() const {
     return d_nv->d_ptr;
+  }
+
+  /**
+   * From shared_ptr. If *this owns a pointer, return the 
+   * number of owners, otherwise zero.
+   */
+  long use_count() const {
+    return 0;
   }
 
   /**
