@@ -207,11 +207,11 @@ Term BoolectorSolver::make_term(bool b) const
 {
   if (b)
   {
-    return std::make_shared<BoolectorTerm> (btor, boolector_const(btor, "1"));
+    return make_shared_term(btor, boolector_const(btor, "1"));
   }
   else
   {
-    return std::make_shared<BoolectorTerm> (btor, boolector_const(btor, "0"));
+    return make_shared_term(btor, boolector_const(btor, "0"));
   }
 }
 
@@ -222,7 +222,7 @@ Term BoolectorSolver::make_term(int64_t i, const Sort & sort) const
     std::shared_ptr<BoolectorSortBase> bs =
         std::static_pointer_cast<BoolectorSortBase>(sort);
     // note: give the constant value a null PrimOp
-    return std::make_shared<BoolectorTerm> (btor, boolector_int(btor, i, bs->sort));
+    return make_shared_term(btor, boolector_int(btor, i, bs->sort));
   }
   catch (InternalSolverException & e)
   {
@@ -260,7 +260,7 @@ Term BoolectorSolver::make_term(std::string val,
           + std::to_string(base));
     }
 
-    return std::make_shared<BoolectorTerm> (btor, node);
+    return make_shared_term(btor, node);
   }
   catch (InternalSolverException & e)
   {
@@ -273,11 +273,11 @@ Term BoolectorSolver::make_term(const Term & val, const Sort & sort) const
 {
   if (sort->get_sort_kind() == ARRAY)
   {
-    std::shared_ptr<BoolectorTerm> bt =
-        std::static_pointer_cast<BoolectorTerm>(val);
+    BoolectorTerm *bt =
+        dynamic_cast<BoolectorTerm*>(val.get());
     std::shared_ptr<BoolectorSortBase> bs =
         std::static_pointer_cast<BoolectorSortBase>(sort);
-    return std::make_shared<BoolectorTerm>
+    return make_shared_term
         (btor, boolector_const_array(btor, bs->sort, bt->node));
   }
   else
@@ -290,8 +290,8 @@ Term BoolectorSolver::make_term(const Term & val, const Sort & sort) const
 
 void BoolectorSolver::assert_formula(const Term & t)
 {
-  std::shared_ptr<BoolectorTerm> bt =
-      std::static_pointer_cast<BoolectorTerm>(t);
+  BoolectorTerm *bt =
+      dynamic_cast<BoolectorTerm*>(t.get());
   boolector_assert(btor, bt->node);
 }
 
@@ -345,8 +345,8 @@ uint64_t BoolectorSolver::get_context_level() const { return context_level; }
 Term BoolectorSolver::get_value(const Term & t) const
 {
   Term result;
-  std::shared_ptr<BoolectorTerm> bt =
-      std::static_pointer_cast<BoolectorTerm>(t);
+  BoolectorTerm *bt =
+      dynamic_cast<BoolectorTerm*>(t.get());
   Sort sort = t->get_sort();
   SortKind sk = sort->get_sort_kind();
   if ((sk == BV) || (sk == BOOL))
@@ -355,7 +355,7 @@ Term BoolectorSolver::get_value(const Term & t) const
     BoolectorNode * bc = boolector_const(btor, assignment);
     boolector_free_bv_assignment(btor, assignment);
     // note: give the constant value a null PrimOp
-    result = std::make_shared<BoolectorTerm>(btor, bc);
+    result = make_shared_term(btor, bc);
   }
   else if (sk == ARRAY)
   {
@@ -406,7 +406,7 @@ Term BoolectorSolver::get_value(const Term & t) const
       boolector_release(btor, idx);
       boolector_release(btor, elem);
     }
-    result = std::make_shared<BoolectorTerm>(btor, stores);
+    result = make_shared_term(btor, stores);
 
     // free memory
     if (size)
@@ -439,8 +439,8 @@ UnorderedTermMap BoolectorSolver::get_array_values(const Term & arr,
 
   UnorderedTermMap assignments;
 
-  std::shared_ptr<BoolectorTerm> barr =
-      std::static_pointer_cast<BoolectorTerm>(arr);
+  BoolectorTerm *barr =
+      dynamic_cast<BoolectorTerm*>(arr.get());
 
   char ** bindices;
   char ** bvalues;
@@ -488,7 +488,7 @@ void BoolectorSolver::get_unsat_assumptions(UnorderedTermSet & out)
   BoolectorNode ** bcore = boolector_get_failed_assumptions(btor);
   while (*bcore)
   {
-    out.insert(std::make_shared<BoolectorTerm>(
+    out.insert(make_shared_term(
         btor, boolector_copy(btor, *bcore)));
     ++bcore;
   }
@@ -656,7 +656,7 @@ Term BoolectorSolver::make_symbol(const std::string name, const Sort & sort)
   }
 
   // note: giving the symbol a null Op
-  Term term = std::make_shared<BoolectorTerm> (btor, n);
+  Term term = make_shared_term(btor, n);
   symbol_table[name] = term;
   return term;
 }
@@ -676,7 +676,7 @@ Term BoolectorSolver::make_param(const std::string name, const Sort & sort)
   std::shared_ptr<BoolectorSortBase> bs =
       std::static_pointer_cast<BoolectorSortBase>(sort);
   BoolectorNode * n = boolector_param(btor, bs->sort, name.c_str());
-  return std::make_shared<BoolectorTerm>(btor, n);
+  return make_shared_term(btor, n);
 }
 
 Term BoolectorSolver::make_term(Op op, const Term & t) const
@@ -692,8 +692,8 @@ Term BoolectorSolver::make_term(Op op, const Term & t) const
   }
   else
   {
-    std::shared_ptr<BoolectorTerm> bt =
-        std::static_pointer_cast<BoolectorTerm>(t);
+    BoolectorTerm *bt =
+        dynamic_cast<BoolectorTerm*>(t.get());
     BoolectorNode * btor_res;
     if (op.prim_op == Extract)
     {
@@ -725,7 +725,7 @@ Term BoolectorSolver::make_term(Op op, const Term & t) const
       msg += to_string(op.prim_op);
       throw IncorrectUsageException(msg);
     }
-    return std::make_shared<BoolectorTerm> (btor, btor_res);
+    return make_shared_term(btor, btor_res);
   }
 }
 
@@ -813,15 +813,15 @@ Term BoolectorSolver::substitute(
 {
   BoolectorNodeMap * bmap = boolector_nodemap_new(btor);
 
-  std::shared_ptr<BoolectorTerm> bt =
-      std::static_pointer_cast<BoolectorTerm>(term);
+  BoolectorTerm *bt =
+      dynamic_cast<BoolectorTerm*>(term.get());
 
-  std::shared_ptr<BoolectorTerm> key;
-  std::shared_ptr<BoolectorTerm> value;
+  BoolectorTerm *key;
+  BoolectorTerm *value;
   for (auto elem : substitution_map)
   {
-    key = std::static_pointer_cast<BoolectorTerm>(elem.first);
-    value = std::static_pointer_cast<BoolectorTerm>(elem.second);
+    key = dynamic_cast<BoolectorTerm*>(elem.first.get());
+    value = dynamic_cast<BoolectorTerm*>(elem.second.get());
     // boolectornodemap only supports var -> term mappings
     if (!key->is_symbol())
     {
@@ -839,7 +839,7 @@ Term BoolectorSolver::substitute(
   // counter
   substituted = boolector_copy(btor, substituted);
   boolector_nodemap_delete(bmap);
-  return std::make_shared<BoolectorTerm> (btor, substituted);
+  return make_shared_term(btor, substituted);
 }
 
 void BoolectorSolver::dump_smt2(std::string filename) const
@@ -853,10 +853,10 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, Term t) const
 {
   try
   {
-    std::shared_ptr<BoolectorTerm> bt =
-        std::static_pointer_cast<BoolectorTerm>(t);
+    BoolectorTerm *bt =
+        dynamic_cast<BoolectorTerm*>(t.get());
     BoolectorNode * result = unary_ops.at(op)(btor, bt->node);
-    return std::make_shared<BoolectorTerm> (btor, result);
+    return make_shared_term(btor, result);
   }
   catch (std::out_of_range & o)
   {
@@ -870,47 +870,47 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, Term t0, Term t1) const
 {
   try
   {
-    std::shared_ptr<BoolectorTerm> bt0 =
-        std::static_pointer_cast<BoolectorTerm>(t0);
-    std::shared_ptr<BoolectorTerm> bt1 =
-        std::static_pointer_cast<BoolectorTerm>(t1);
+    BoolectorTerm *bt0 =
+        dynamic_cast<BoolectorTerm*>(t0.get());
+    BoolectorTerm *bt1 =
+        dynamic_cast<BoolectorTerm*>(t1.get());
 
     BoolectorNode * result;
     if (op == Apply)
     {
-      std::shared_ptr<BoolectorTerm> bt =
-          std::static_pointer_cast<BoolectorTerm>(t1);
+      BoolectorTerm *bt =
+          dynamic_cast<BoolectorTerm*>(t1.get());
       std::vector<BoolectorNode *> args = { bt->node };
 
-      std::shared_ptr<BoolectorTerm> bt0 =
-          std::static_pointer_cast<BoolectorTerm>(t0);
+      BoolectorTerm *bt0 =
+          dynamic_cast<BoolectorTerm*>(t0.get());
       result = boolector_apply(btor, args.data(), 1, bt0->node);
     }
     else if (op == Forall)
     {
-      std::shared_ptr<BoolectorTerm> bt0 =
-          std::static_pointer_cast<BoolectorTerm>(t0);
-      std::shared_ptr<BoolectorTerm> bt1 =
-          std::static_pointer_cast<BoolectorTerm>(t1);
+      BoolectorTerm *bt0 =
+          dynamic_cast<BoolectorTerm*>(t0.get());
+      BoolectorTerm *bt1 =
+          dynamic_cast<BoolectorTerm*>(t1.get());
       std::vector<BoolectorNode *> params({ bt0->node });
-      return std::make_shared<BoolectorTerm>(
+      return make_shared_term(
           btor, boolector_forall(btor, params.data(), 1, bt1->node));
     }
     else if (op == Exists)
     {
-      std::shared_ptr<BoolectorTerm> bt0 =
-          std::static_pointer_cast<BoolectorTerm>(t0);
-      std::shared_ptr<BoolectorTerm> bt1 =
-          std::static_pointer_cast<BoolectorTerm>(t1);
+      BoolectorTerm *bt0 =
+          dynamic_cast<BoolectorTerm*>(t0.get());
+      BoolectorTerm *bt1 =
+          dynamic_cast<BoolectorTerm*>(t1.get());
       std::vector<BoolectorNode *> params({ bt0->node });
-      return std::make_shared<BoolectorTerm>(
+      return make_shared_term(
           btor, boolector_exists(btor, params.data(), 1, bt1->node));
     }
     else
     {
       result = binary_ops.at(op)(btor, bt0->node, bt1->node);
     }
-    return std::make_shared<BoolectorTerm> (btor, result);
+    return make_shared_term(btor, result);
   }
   catch (std::out_of_range & o)
   {
@@ -924,47 +924,47 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, Term t0, Term t1, Term t2) const
 {
   try
   {
-    std::shared_ptr<BoolectorTerm> bt0 =
-        std::static_pointer_cast<BoolectorTerm>(t0);
-    std::shared_ptr<BoolectorTerm> bt1 =
-        std::static_pointer_cast<BoolectorTerm>(t1);
-    std::shared_ptr<BoolectorTerm> bt2 =
-        std::static_pointer_cast<BoolectorTerm>(t2);
+    BoolectorTerm *bt0 =
+        dynamic_cast<BoolectorTerm*>(t0.get());
+    BoolectorTerm *bt1 =
+        dynamic_cast<BoolectorTerm*>(t1.get());
+    BoolectorTerm *bt2 =
+        dynamic_cast<BoolectorTerm*>(t2.get());
     BoolectorNode * result;
     if (op == Apply)
     {
-      std::shared_ptr<BoolectorTerm> bt1 =
-          std::static_pointer_cast<BoolectorTerm>(t1);
-      std::shared_ptr<BoolectorTerm> bt2 =
-          std::static_pointer_cast<BoolectorTerm>(t2);
+      BoolectorTerm *bt1 =
+          dynamic_cast<BoolectorTerm*>(t1.get());
+      BoolectorTerm *bt2 =
+          dynamic_cast<BoolectorTerm*>(t2.get());
       std::vector<BoolectorNode *> args = { bt1->node, bt2->node };
 
-      std::shared_ptr<BoolectorTerm> bt0 =
-          std::static_pointer_cast<BoolectorTerm>(t0);
+      BoolectorTerm *bt0 =
+          dynamic_cast<BoolectorTerm*>(t0.get());
       result = boolector_apply(btor, args.data(), 2, bt0->node);
     }
     else if (op == Forall)
     {
-      std::shared_ptr<BoolectorTerm> bt0 =
-          std::static_pointer_cast<BoolectorTerm>(t0);
-      std::shared_ptr<BoolectorTerm> bt1 =
-          std::static_pointer_cast<BoolectorTerm>(t1);
-      std::shared_ptr<BoolectorTerm> bt2 =
-          std::static_pointer_cast<BoolectorTerm>(t2);
+      BoolectorTerm *bt0 =
+          dynamic_cast<BoolectorTerm*>(t0.get());
+      BoolectorTerm *bt1 =
+          dynamic_cast<BoolectorTerm*>(t1.get());
+      BoolectorTerm *bt2 =
+          dynamic_cast<BoolectorTerm*>(t2.get());
       std::vector<BoolectorNode *> params({ bt0->node, bt1->node });
-      return std::make_shared<BoolectorTerm>(
+      return make_shared_term(
           btor, boolector_forall(btor, params.data(), 2, bt2->node));
     }
     else if (op == Exists)
     {
-      std::shared_ptr<BoolectorTerm> bt0 =
-          std::static_pointer_cast<BoolectorTerm>(t0);
-      std::shared_ptr<BoolectorTerm> bt1 =
-          std::static_pointer_cast<BoolectorTerm>(t1);
-      std::shared_ptr<BoolectorTerm> bt2 =
-          std::static_pointer_cast<BoolectorTerm>(t2);
+      BoolectorTerm *bt0 =
+          dynamic_cast<BoolectorTerm*>(t0.get());
+      BoolectorTerm *bt1 =
+          dynamic_cast<BoolectorTerm*>(t1.get());
+      BoolectorTerm *bt2 =
+          dynamic_cast<BoolectorTerm*>(t2.get());
       std::vector<BoolectorNode *> params({ bt0->node, bt1->node });
-      return std::make_shared<BoolectorTerm>(
+      return make_shared_term(
           btor, boolector_exists(btor, params.data(), 2, bt2->node));
     }
     else
@@ -972,7 +972,7 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, Term t0, Term t1, Term t2) const
       result = ternary_ops.at(op)(btor, bt0->node, bt1->node, bt2->node);
     }
 
-    return std::make_shared<BoolectorTerm> (btor, result);
+    return make_shared_term(btor, result);
   }
   catch (std::out_of_range & o)
   {
@@ -1002,18 +1002,18 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, TermVec terms) const
   {
     std::vector<BoolectorNode *> args;
     args.reserve(size - 1);
-    std::shared_ptr<BoolectorTerm> bt;
+    BoolectorTerm *bt;
     for (size_t i = 1; i < size; ++i)
     {
-      bt = std::static_pointer_cast<BoolectorTerm>(terms[i]);
+      bt = dynamic_cast<BoolectorTerm*>(terms[i].get());
       args.push_back(bt->node);
     }
-    std::shared_ptr<BoolectorTerm> bt0 =
-        std::static_pointer_cast<BoolectorTerm>(terms[0]);
+    BoolectorTerm *bt0 =
+        dynamic_cast<BoolectorTerm*>(terms[0].get());
     BoolectorNode * result =
         boolector_apply(btor, args.data(), args.size(), bt0->node);
 
-    return std::make_shared<BoolectorTerm>(btor, result);
+    return make_shared_term(btor, result);
   }
   else if (is_variadic(op))
   {
@@ -1024,7 +1024,7 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, TermVec terms) const
     bargs.reserve(size);
     for (const auto & tt : terms)
     {
-      bargs.push_back(std::static_pointer_cast<BoolectorTerm>(tt)->node);
+      bargs.push_back(dynamic_cast<BoolectorTerm*>(tt.get())->node);
     }
 
     BoolectorNode * res = btor_fun(btor, bargs[0], bargs[1]);
@@ -1035,7 +1035,7 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, TermVec terms) const
       boolector_release(btor, trailing_res);
       trailing_res = res;
     }
-    return std::make_shared<BoolectorTerm>(btor, res);
+    return make_shared_term(btor, res);
   }
   else if (op == Forall || op == Exists)
   {
@@ -1044,10 +1044,10 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, TermVec terms) const
     for (size_t i = 0; i + 1 < terms.size(); ++i)
     {
       bparams.push_back(
-          std::static_pointer_cast<BoolectorTerm>(terms[i])->node);
+          dynamic_cast<BoolectorTerm*>(terms[i].get())->node);
     }
     BoolectorNode * bbody =
-        std::static_pointer_cast<BoolectorTerm>(terms.back())->node;
+        dynamic_cast<BoolectorTerm*>(terms.back().get())->node;
     BoolectorNode * bres;
     if (op == Forall)
     {
@@ -1058,7 +1058,7 @@ Term BoolectorSolver::apply_prim_op(PrimOp op, TermVec terms) const
       assert(op == Exists);
       bres = boolector_exists(btor, bparams.data(), bparams.size(), bbody);
     }
-    return std::make_shared<BoolectorTerm>(btor, bres);
+    return make_shared_term(btor, bres);
   }
   else if (op == Distinct)
   {

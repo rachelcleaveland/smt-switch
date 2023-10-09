@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <stdio.h>
 
 #include "assert.h"
 #include "ops.h"
@@ -97,17 +98,6 @@ class AbsTerm
 };
 
 
-template <typename T>
-class TestClass
-{
-  public:
-  TestClass(T *t) : test(t) {}
-
-  private:
-  T *test;
-
-};
-
 /**
  * This is a PtrValue.
  */
@@ -120,8 +110,9 @@ class PtrValue
  public:
   PtrValue() : d_ptr(nullptr), d_rc(1) {}
 
-  PtrValue(T t) : d_ptr(new T(t)), d_rc(1) {}
+  PtrValue(T &t) : d_ptr(new T(t)), d_rc(1) {}
 
+  PtrValue(T *t) : d_ptr(t), d_rc(1) {}
   /**
    * Constructor for GenericTerm.
    */ 
@@ -167,15 +158,10 @@ class PtrValue
   /**
    * Destructor. 
    */
-  //~PtrValue() {
-  //  dec();
-  //}
+  ~PtrValue() {}
 
   void inc()
   {
-    assert(!isBeingDeleted());
-        //<< "PtrValue is currently being deleted "
-        //   "and increment is being called on it. Don't Do That!";
     // FIXME multithreading
     if (__builtin_expect((d_rc < MAX_RC - 1), true))
     {
@@ -184,7 +170,6 @@ class PtrValue
     else if (__builtin_expect((d_rc == MAX_RC - 1), false))
     {
       ++d_rc;
-      //markRefCountMaxedOut();
     }
   }
 
@@ -201,17 +186,10 @@ class PtrValue
     }
   }
 
-  //void markRefCountMaxedOut();
   void markForDeletion() {
-    //delete(d_ptr);
+    delete(d_ptr);
   }
 
-  bool isBeingDeleted() const {
-    return false;
-  }
-
-  /** Returns true if the reference count is maximized. */
-  inline bool HasMaximizedReferenceCount() { return d_rc == MAX_RC; }
 
   /** The expression */
   T *d_ptr;
@@ -243,6 +221,11 @@ public:
   RachelsSharedPtr() : d_nv(new PtrValue<T>()) {}
 
   /**
+   * Constructor taking a pointer to an AbsTerm.
+   */
+  RachelsSharedPtr(T *ptr) : d_nv(new PtrValue<T>(ptr)) {}
+
+  /**
     * Constructor taking an AbsTerm. 
     */
   RachelsSharedPtr(T ptr) : d_nv(new PtrValue<T>(ptr)) {
@@ -259,6 +242,7 @@ public:
     //std::cout << "  d_nv->d_ptr = " << reinterpret_cast<void *>(d_nv->d_ptr) << std::endl;
     //std::cout << "  d_rc = " << d_nv->d_rc << std::endl; 
 
+    if (!d_nv) d_nv = new PtrValue<T>();
     d_nv->inc();
   }
 
@@ -329,16 +313,6 @@ public:
     return *this;
   }
 
- /**
-  * Casts the PtrValue pointed to by d_nv.
-  */
-  template <typename T_n>
-  RachelsSharedPtr<T_n> cast_shared_pointer() const {
-    PtrValue<T_n>* nv = (PtrValue<T_n>*)(d_nv);
-    return RachelsSharedPtr<T_n>(nv);
-    //d_nv->d_ptr = static_cast<T_n*>(d_nv->d_ptr);
-  }
-
   /**
    * Dereferencing operators.
    */
@@ -359,7 +333,7 @@ public:
    * number of owners, otherwise zero.
    */
   long use_count() const {
-    return 0;
+    return d_nv->d_rc;
   }
 
   /**
@@ -384,16 +358,6 @@ public:
 
 
 };/* class RachelsSharedPtr */
-
-/**
- * Casts a Term to a specific type of shared pointer.
- */
-template <typename T>
-RachelsSharedPtr<T> cast_ptr(Term t) {
-  return t.cast_shared_pointer<T>();
-  //return std::static_pointer_cast<Cvc5Term>(t);
-
-}
 
 /*
 RachelsSharedPtr& RachelsSharedPtr::
@@ -445,7 +409,7 @@ inline bool operator>=(const Term & t1, const Term & t2)
 
 std::ostream& operator<<(std::ostream& output, const Term t);
 
-// ptr iterators
+// term iterators
 // impelementation based on
 // https://www.codeproject.com/Articles/92671/How-to-write-abstract-iterators-in-Cplusplus
 class TermIterBase

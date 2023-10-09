@@ -181,7 +181,7 @@ Term Yices2Solver::make_term(bool b) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Term> (y_term);
+  return make_shared_term(y_term);
 }
 
 
@@ -245,7 +245,7 @@ Term Yices2Solver::make_term(int64_t i, const Sort & sort) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Term> (y_term);
+  return make_shared_term(y_term);
 }
 
 Term Yices2Solver::make_term(const std::string val,
@@ -288,7 +288,7 @@ Term Yices2Solver::make_term(const std::string val,
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Term> (y_term);
+  return make_shared_term(y_term);
 }
 
 Term Yices2Solver::make_term(const Term & val, const Sort & sort) const
@@ -299,7 +299,7 @@ Term Yices2Solver::make_term(const Term & val, const Sort & sort) const
 
 void Yices2Solver::assert_formula(const Term & t)
 {
-  shared_ptr<Yices2Term> yterm = static_pointer_cast<Yices2Term>(t);
+  Yices2Term *yterm = dynamic_cast<Yices2Term*>(t.get());
   if (!yices_type_is_bool(yices_type_of_term(yterm->term)))
   {
     throw IncorrectUsageException("Attempted to assert non-boolean to solver: "
@@ -349,10 +349,10 @@ Result Yices2Solver::check_sat_assuming(const TermVec & assumptions)
   vector<term_t> y_assumps;
   y_assumps.reserve(assumptions.size());
 
-  shared_ptr<Yices2Term> ya;
+  Yices2Term *ya;
   for (auto a : assumptions)
   {
-    ya = static_pointer_cast<Yices2Term>(a);
+    ya = dynamic_cast<Yices2Term*>(a.get());
     y_assumps.push_back(ya->term);
   }
 
@@ -364,10 +364,10 @@ Result Yices2Solver::check_sat_assuming_list(const TermList & assumptions)
   vector<term_t> y_assumps;
   y_assumps.reserve(assumptions.size());
 
-  shared_ptr<Yices2Term> ya;
+  Yices2Term *ya;
   for (auto a : assumptions)
   {
-    ya = static_pointer_cast<Yices2Term>(a);
+    ya = dynamic_cast<Yices2Term*>(a.get());
     y_assumps.push_back(ya->term);
   }
 
@@ -380,10 +380,10 @@ Result Yices2Solver::check_sat_assuming_set(
   vector<term_t> y_assumps;
   y_assumps.reserve(assumptions.size());
 
-  shared_ptr<Yices2Term> ya;
+  Yices2Term *ya;
   for (auto a : assumptions)
   {
-    ya = static_pointer_cast<Yices2Term>(a);
+    ya = dynamic_cast<Yices2Term*>(a.get());
     y_assumps.push_back(ya->term);
   }
 
@@ -425,12 +425,12 @@ uint64_t Yices2Solver::get_context_level() const { return context_level; }
 
 Term Yices2Solver::get_value(const Term & t) const
 {
-  shared_ptr<Yices2Term> yterm = static_pointer_cast<Yices2Term>(t);
+  Yices2Term *yterm = dynamic_cast<Yices2Term*>(t.get());
   model_t * model = yices_get_model(ctx, true);
 
   if (!yices_term_is_function(yterm->term))
   {
-    return std::make_shared<Yices2Term>
+    return make_shared_term
         (yices_get_value_as_term(model, yterm->term));
   }
   else
@@ -473,7 +473,7 @@ void Yices2Solver::get_unsat_assumptions(UnorderedTermSet & out)
     {
       throw InternalSolverException("Got an empty term from vector");
     }
-    out.insert(std::make_shared<Yices2Term>(ycore.data[i]));
+    out.insert(make_shared_term(ycore.data[i]));
   }
 
   yices_delete_term_vector(&ycore);
@@ -693,11 +693,11 @@ Term Yices2Solver::make_symbol(const std::string name, const Sort & sort)
   Term sym;
   if (ysort->get_sort_kind() == FUNCTION)
   {
-    sym = std::make_shared<Yices2Term>(y_term, true);
+    sym = make_shared_term(y_term, true);
   }
   else
   {
-    sym = std::make_shared<Yices2Term>(y_term);
+    sym = make_shared_term(y_term);
   }
   assert(sym);
   symbol_table[name] = sym;
@@ -721,7 +721,7 @@ Term Yices2Solver::make_param(const std::string name, const Sort & sort)
 
 Term Yices2Solver::make_term(Op op, const Term & t) const
 {
-  shared_ptr<Yices2Term> yterm = static_pointer_cast<Yices2Term>(t);
+  Yices2Term *yterm = dynamic_cast<Yices2Term*>(t.get());
   term_t res;
 
   if (op.prim_op == Extract)
@@ -808,13 +808,13 @@ Term Yices2Solver::make_term(Op op, const Term & t) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Term> (res);
+  return make_shared_term(res);
 }
 
 Term Yices2Solver::make_term(Op op, const Term & t0, const Term & t1) const
 {
-  shared_ptr<Yices2Term> yterm0 = static_pointer_cast<Yices2Term>(t0);
-  shared_ptr<Yices2Term> yterm1 = static_pointer_cast<Yices2Term>(t1);
+  Yices2Term *yterm0 = dynamic_cast<Yices2Term*>(t0.get());
+  Yices2Term *yterm1 = dynamic_cast<Yices2Term*>(t1.get());
   term_t res;
   if (!op.num_idx)
   {
@@ -855,11 +855,11 @@ Term Yices2Solver::make_term(Op op, const Term & t0, const Term & t1) const
 
   if (yices_term_is_function(yterm0->term) && op.prim_op == Apply)
   {
-    return std::make_shared<Yices2Term> (res, true);
+    return make_shared_term(res, true);
   }
   else
   {
-    return std::make_shared<Yices2Term> (res);
+    return make_shared_term(res);
   }
 }
 
@@ -868,9 +868,9 @@ Term Yices2Solver::make_term(Op op,
                              const Term & t1,
                              const Term & t2) const
 {
-  shared_ptr<Yices2Term> yterm0 = static_pointer_cast<Yices2Term>(t0);
-  shared_ptr<Yices2Term> yterm1 = static_pointer_cast<Yices2Term>(t1);
-  shared_ptr<Yices2Term> yterm2 = static_pointer_cast<Yices2Term>(t2);
+  Yices2Term *yterm0 = dynamic_cast<Yices2Term*>(t0.get());
+  Yices2Term *yterm1 = dynamic_cast<Yices2Term*>(t1.get());
+  Yices2Term *yterm2 = dynamic_cast<Yices2Term*>(t2.get());
   term_t res;
   if (!op.num_idx)
   {
@@ -913,11 +913,11 @@ Term Yices2Solver::make_term(Op op,
 
   if (yices_term_is_function(yterm0->term) && op.prim_op == Apply)
   {
-    return std::make_shared<Yices2Term> (res, true);
+    return make_shared_term(res, true);
   }
   else
   {
-    return std::make_shared<Yices2Term> (res);
+    return make_shared_term(res);
   }
 }
 
@@ -949,16 +949,16 @@ Term Yices2Solver::make_term(Op op, const TermVec & terms) const
   {
     vector<term_t> yargs;
     yargs.reserve(size);
-    shared_ptr<Yices2Term> yterm;
+    Yices2Term *yterm;
 
     // skip the first term (that's actually a function)
     for (size_t i = 1; i < terms.size(); i++)
     {
-      yterm = static_pointer_cast<Yices2Term>(terms[i]);
+      yterm = dynamic_cast<Yices2Term*>(terms[i].get());
       yargs.push_back(yterm->term);
     }
 
-    yterm = static_pointer_cast<Yices2Term>(terms[0]);
+    yterm = dynamic_cast<Yices2Term*>(terms[0].get());
     if (!yices_term_is_function(yterm->term))
     {
       string msg(
@@ -973,12 +973,12 @@ Term Yices2Solver::make_term(Op op, const TermVec & terms) const
   {
     vector<term_t> yargs;
     yargs.reserve(size);
-    shared_ptr<Yices2Term> yterm;
+    Yices2Term *yterm;
 
     // skip the first term (that's actually a function)
     for (const auto & tt : terms)
     {
-      yterm = static_pointer_cast<Yices2Term>(tt);
+      yterm = dynamic_cast<Yices2Term*>(tt.get());
       yargs.push_back(yterm->term);
     }
 
@@ -1013,7 +1013,7 @@ Term Yices2Solver::make_term(Op op, const TermVec & terms) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Term> (res);
+  return make_shared_term(res);
 }
 
 void Yices2Solver::reset()
@@ -1028,20 +1028,20 @@ void Yices2Solver::reset_assertions() { yices_reset_context(ctx); }
 Term Yices2Solver::substitute(const Term term,
                               const UnorderedTermMap & substitution_map) const
 {
-  shared_ptr<Yices2Term> yterm = static_pointer_cast<Yices2Term>(term);
+  Yices2Term *yterm = dynamic_cast<Yices2Term*>(term.get());
 
   vector<term_t> to_subst;
   vector<term_t> values;
 
-  shared_ptr<Yices2Term> tmp_key;
-  shared_ptr<Yices2Term> tmp_val;
+  Yices2Term *tmp_key;
+  Yices2Term *tmp_val;
 
   for (auto elem : substitution_map)
   {
-    tmp_key = static_pointer_cast<Yices2Term>(elem.first);
+    tmp_key = dynamic_cast<Yices2Term*>(elem.first.get());
 
     to_subst.push_back(tmp_key->term);
-    tmp_val = static_pointer_cast<Yices2Term>(elem.second);
+    tmp_val = dynamic_cast<Yices2Term*>(elem.second.get());
 
     values.push_back(tmp_val->term);
   }
@@ -1055,7 +1055,7 @@ Term Yices2Solver::substitute(const Term term,
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Term> (res);
+  return make_shared_term(res);
 }
 
 void Yices2Solver::dump_smt2(std::string filename) const

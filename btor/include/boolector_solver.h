@@ -144,10 +144,10 @@ class BoolectorSolver : public AbsSmtSolver
   template <class I>
   inline Result check_sat_assuming(I it, const I & end)
   {
-    std::shared_ptr<BoolectorTerm> bt;
+    BoolectorTerm *bt;
     while (it != end)
     {
-      bt = std::static_pointer_cast<BoolectorTerm>(*it);
+      bt = dynamic_cast<BoolectorTerm*>((*it).get());
       assert(boolector_get_width(bt->btor, bt->node) == 1);
       boolector_assume(btor, bt->node);
       ++it;

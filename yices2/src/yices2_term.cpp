@@ -25,6 +25,21 @@ using namespace std;
 
 namespace smt {
 
+/**
+ * Make a shared pointer from a term_t.
+ */
+Term make_shared_term(term_t t) {
+  Yices2Term *yterm = new Yices2Term(t);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(yterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
+Term make_shared_term(term_t t, bool b) {
+  Yices2Term *yterm = new Yices2Term(t,b);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(yterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
 // Yices2TermIter implementation
 
 Yices2TermIter::Yices2TermIter(const Yices2TermIter & it)
@@ -226,7 +241,7 @@ size_t Yices2Term::get_id() const { return term; }
 
 bool Yices2Term::compare(const Term & absterm) const
 {
-  shared_ptr<Yices2Term> yterm = std::static_pointer_cast<Yices2Term>(absterm);
+  Yices2Term *yterm = dynamic_cast<Yices2Term*>(absterm.get());
   return term == yterm->term;
 }
 

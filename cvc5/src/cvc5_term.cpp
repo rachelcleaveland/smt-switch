@@ -122,8 +122,9 @@ std::hash<cvc5::Term> termhash;
  * Makes a shared pointer from a term.
  */
 Term make_shared_term(cvc5::Term t) {
-  return (RachelsSharedPtr<Cvc5Term>(t)).cast_shared_pointer<AbsTerm>(); 
-  //return std::make_shared<Cvc5Term>(t);
+  Cvc5Term *cvct = new Cvc5Term(t);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(cvct);
+  return RachelsSharedPtr<AbsTerm>(abst);
 }
 
 /* Cvc5TermIter implementation */
@@ -193,10 +194,8 @@ std::size_t Cvc5Term::get_id() const { return term.getId(); }
 
 bool Cvc5Term::compare(const Term & absterm) const
 {
-  std::cout << "cvc5_term.cpp: compare" << std::endl;
-  RachelsSharedPtr<Cvc5Term> other = cast_ptr<Cvc5Term>(absterm);
-  std::cout << "cvc5_term.cpp: compare 2" << std::endl;
-  return term == other->term;
+  Cvc5Term *other = dynamic_cast<Cvc5Term *>(absterm.get());
+  return term == other->get_cvc5_term();
 }
 
 Op Cvc5Term::get_op() const

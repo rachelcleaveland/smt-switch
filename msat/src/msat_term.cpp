@@ -119,6 +119,21 @@ const std::unordered_map<msat_symbol_tag, PrimOp> tag2op({
     // ignore it MSAT_TAG_INT_FROM_SBV
 });
 
+/**
+ * Make a shared pointer from a MathSat term.
+ */
+Term make_shared_term(msat_env e, msat_term t) {
+  MsatTerm *mterm = new MsatTerm(e,t);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(mterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
+Term make_shared_term(msat_env e, msat_decl d) {
+  MsatTerm *mterm = new MsatTerm(e,d);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(mterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
 // MsatTermIter implementation
 
 MsatTermIter::MsatTermIter(const MsatTermIter & it)
@@ -140,7 +155,7 @@ const Term MsatTermIter::operator*()
 {
   if (!pos && msat_term_is_uf(env, term))
   {
-    return std::make_shared<MsatTerm> (env, msat_term_get_decl(term));
+    return make_shared_term(env, msat_term_get_decl(term));
   }
   else
   {
@@ -150,7 +165,7 @@ const Term MsatTermIter::operator*()
       actual_idx--;
     }
 
-    return std::make_shared<MsatTerm>(env, msat_term_get_arg(term, actual_idx));
+    return make_shared_term(env, msat_term_get_arg(term, actual_idx));
   }
 }
 
@@ -227,7 +242,7 @@ size_t MsatTerm::get_id() const
 
 bool MsatTerm::compare(const Term & absterm) const
 {
-  shared_ptr<MsatTerm> mterm = std::static_pointer_cast<MsatTerm>(absterm);
+  MsatTerm *mterm = dynamic_cast<MsatTerm*>(absterm.get());
   if (is_uf ^ mterm->is_uf)
   {
     // can't be equal if one is a uf and the other is not

@@ -175,7 +175,7 @@ void MsatSolver::set_logic(const std::string log)
 void MsatSolver::assert_formula(const Term & t)
 {
   initialize_env();
-  shared_ptr<MsatTerm> mterm = static_pointer_cast<MsatTerm>(t);
+  MsatTerm *mterm = dynamic_cast<MsatTerm*>(t.get());
   if (msat_assert_formula(env, mterm->term))
   {
     string msg("Cannot assert term: ");
@@ -223,7 +223,7 @@ Result MsatSolver::check_sat_assuming(const TermVec & assumptions)
   msat_term ma;
   for (size_t i = 0; i < num_assumps; ++i)
   {
-    ma = static_pointer_cast<MsatTerm>(assumptions[i])->term;
+    ma = dynamic_cast<MsatTerm*>(assumptions[i].get())->term;
     m_assumps.push_back(ma);
   }
 
@@ -254,10 +254,10 @@ Result MsatSolver::check_sat_assuming_list(const TermList & assumptions)
   vector<msat_term> m_assumps;
   m_assumps.reserve(assumptions.size());
 
-  shared_ptr<MsatTerm> ma;
+  MsatTerm *ma;
   for (const auto & a : assumptions)
   {
-    ma = static_pointer_cast<MsatTerm>(a);
+    ma = dynamic_cast<MsatTerm*>(a.get());
     m_assumps.push_back(ma->term);
   }
 
@@ -288,10 +288,10 @@ Result MsatSolver::check_sat_assuming_set(const UnorderedTermSet & assumptions)
   vector<msat_term> m_assumps;
   m_assumps.reserve(assumptions.size());
 
-  shared_ptr<MsatTerm> ma;
+  MsatTerm *ma;
   for (const auto & a : assumptions)
   {
-    ma = static_pointer_cast<MsatTerm>(a);
+    ma = dynamic_cast<MsatTerm*>(a.get());
     m_assumps.push_back(ma->term);
   }
 
@@ -324,7 +324,7 @@ uint64_t MsatSolver::get_context_level() const
 Term MsatSolver::get_value(const Term & t) const
 {
   initialize_env();
-  shared_ptr<MsatTerm> mterm = static_pointer_cast<MsatTerm>(t);
+  MsatTerm *mterm = dynamic_cast<MsatTerm*>(t.get());
   msat_term val = msat_get_model_value(env, mterm->term);
 
   if (MSAT_ERROR_TERM(val))
@@ -337,7 +337,7 @@ Term MsatSolver::get_value(const Term & t) const
     throw IncorrectUsageException(msg);
   }
 
-  return std::make_shared<MsatTerm> (env, val);
+  return make_shared_term (env, val);
 }
 
 UnorderedTermMap MsatSolver::get_array_values(const Term & arr,
@@ -345,17 +345,17 @@ UnorderedTermMap MsatSolver::get_array_values(const Term & arr,
 {
   initialize_env();
   UnorderedTermMap assignments;
-  out_const_base = nullptr;
+  out_const_base = RachelsSharedPtr<AbsTerm>();
 
-  shared_ptr<MsatTerm> marr = static_pointer_cast<MsatTerm>(arr);
+  MsatTerm *marr = dynamic_cast<MsatTerm*>(arr.get());
   msat_term mval = msat_get_model_value(env, marr->term);
 
   Term idx;
   Term val;
   while (msat_term_is_array_write(env, mval))
   {
-    idx = std::make_shared<MsatTerm>(env, msat_term_get_arg(mval, 1));
-    val = std::make_shared<MsatTerm>(env, msat_term_get_arg(mval, 2));
+    idx = make_shared_term(env, msat_term_get_arg(mval, 1));
+    val = make_shared_term(env, msat_term_get_arg(mval, 2));
     assignments[idx] = val;
     mval = msat_term_get_arg(mval, 0);
   }
@@ -363,7 +363,7 @@ UnorderedTermMap MsatSolver::get_array_values(const Term & arr,
   if (msat_term_is_array_const(env, mval))
   {
     out_const_base =
-        std::make_shared<MsatTerm>(env, msat_term_get_arg(mval, 0));
+        make_shared_term(env, msat_term_get_arg(mval, 0));
   }
 
   return assignments;
@@ -394,7 +394,7 @@ void MsatSolver::get_unsat_assumptions(UnorderedTermSet & out)
     {
       throw InternalSolverException("got an error term in the unsat core");
     }
-    out.insert(std::make_shared<MsatTerm>(env, assumption_map_.at(msat_term_id(*mcore_iter))));
+    out.insert(make_shared_term(env, assumption_map_.at(msat_term_id(*mcore_iter))));
     ++mcore_iter;
   }
   msat_free(mcore);
@@ -609,11 +609,11 @@ Term MsatSolver::make_term(bool b) const
   initialize_env();
   if (b)
   {
-    return std::make_shared<MsatTerm> (env, msat_make_true(env));
+    return make_shared_term (env, msat_make_true(env));
   }
   else
   {
-    return std::make_shared<MsatTerm> (env, msat_make_false(env));
+    return make_shared_term (env, msat_make_false(env));
   }
 }
 
@@ -632,7 +632,7 @@ Term MsatSolver::make_term(int64_t i, const Sort & sort) const
       {
         throw IncorrectUsageException("");
       }
-      return std::make_shared<MsatTerm> (env, mval);
+      return make_shared_term (env, mval);
     }
     else if (sk == REAL || sk == INT)
     {
@@ -641,7 +641,7 @@ Term MsatSolver::make_term(int64_t i, const Sort & sort) const
       {
         throw IncorrectUsageException("");
       }
-      return std::make_shared<MsatTerm> (env, mval);
+      return make_shared_term (env, mval);
     }
     else
     {
@@ -673,7 +673,7 @@ Term MsatSolver::make_term(const std::string val,
       {
         throw IncorrectUsageException("");
       }
-      return std::make_shared<MsatTerm> (env, mval);
+      return make_shared_term (env, mval);
     }
     else if (sk == REAL || sk == INT)
     {
@@ -688,7 +688,7 @@ Term MsatSolver::make_term(const std::string val,
       {
         throw IncorrectUsageException("");
       }
-      return std::make_shared<MsatTerm> (env, mval);
+      return make_shared_term (env, mval);
     }
     else
     {
@@ -714,8 +714,8 @@ Term MsatSolver::make_term(const Term & val, const Sort & sort) const
         "Expecting to create a const array but got a non array sort");
   }
   shared_ptr<MsatSort> msort = static_pointer_cast<MsatSort>(sort);
-  shared_ptr<MsatTerm> mval = static_pointer_cast<MsatTerm>(val);
-  return std::make_shared<MsatTerm>
+  MsatTerm *mval = dynamic_cast<MsatTerm*>(val.get());
+  return make_shared_term
       (env, msat_make_array_const(env, msort->type, mval->term));
 }
 
@@ -752,7 +752,7 @@ Term MsatSolver::make_symbol(const string name, const Sort & sort)
 
   if (sort->get_sort_kind() == FUNCTION)
   {
-    return std::make_shared<MsatTerm> (env, decl);
+    return make_shared_term (env, decl);
   }
   else
   {
@@ -761,7 +761,7 @@ Term MsatSolver::make_symbol(const string name, const Sort & sort)
     {
       throw InternalSolverException("Got error term.");
     }
-    return std::make_shared<MsatTerm> (env, res);
+    return make_shared_term (env, res);
   }
 }
 
@@ -781,9 +781,9 @@ Term MsatSolver::get_symbol(const std::string & name)
   if (MSAT_ERROR_TERM(res))
   {
     // assume it is a function
-    return std::make_shared<MsatTerm>(env, decl);
+    return make_shared_term(env, decl);
   }
-  return std::make_shared<MsatTerm>(env, res);
+  return make_shared_term(env, res);
 }
 
 Term MsatSolver::make_param(const std::string name, const Sort & sort)
@@ -791,13 +791,13 @@ Term MsatSolver::make_param(const std::string name, const Sort & sort)
   initialize_env();
   shared_ptr<MsatSort> msort = static_pointer_cast<MsatSort>(sort);
   msat_term var = msat_make_variable(env, name.c_str(), msort->type);
-  return std::make_shared<MsatTerm>(env, var);
+  return make_shared_term(env, var);
 }
 
 Term MsatSolver::make_term(Op op, const Term & t) const
 {
   initialize_env();
-  shared_ptr<MsatTerm> mterm = static_pointer_cast<MsatTerm>(t);
+  MsatTerm *mterm = dynamic_cast<MsatTerm*>(t.get());
   msat_term res;
   if (!op.num_idx)
   {
@@ -893,15 +893,15 @@ Term MsatSolver::make_term(Op op, const Term & t) const
   }
   else
   {
-    return std::make_shared<MsatTerm> (env, res);
+    return make_shared_term (env, res);
   }
 }
 
 Term MsatSolver::make_term(Op op, const Term & t0, const Term & t1) const
 {
   initialize_env();
-  shared_ptr<MsatTerm> mterm0 = static_pointer_cast<MsatTerm>(t0);
-  shared_ptr<MsatTerm> mterm1 = static_pointer_cast<MsatTerm>(t1);
+  MsatTerm *mterm0 = dynamic_cast<MsatTerm*>(t0.get());
+  MsatTerm *mterm1 = dynamic_cast<MsatTerm*>(t1.get());
   msat_term res;
   if (!op.num_idx)
   {
@@ -943,7 +943,7 @@ Term MsatSolver::make_term(Op op, const Term & t0, const Term & t1) const
   }
   else
   {
-    return std::make_shared<MsatTerm> (env, res);
+    return make_shared_term (env, res);
   }
 }
 
@@ -953,9 +953,9 @@ Term MsatSolver::make_term(Op op,
                            const Term & t2) const
 {
   initialize_env();
-  shared_ptr<MsatTerm> mterm0 = static_pointer_cast<MsatTerm>(t0);
-  shared_ptr<MsatTerm> mterm1 = static_pointer_cast<MsatTerm>(t1);
-  shared_ptr<MsatTerm> mterm2 = static_pointer_cast<MsatTerm>(t2);
+  MsatTerm *mterm0 = dynamic_cast<MsatTerm*>(t0.get());
+  MsatTerm *mterm1 = dynamic_cast<MsatTerm*>(t1.get());
+  MsatTerm *mterm2 = dynamic_cast<MsatTerm*>(t2.get());
   msat_term res;
   if (!op.num_idx)
   {
@@ -1008,7 +1008,7 @@ Term MsatSolver::make_term(Op op,
   }
   else
   {
-    return std::make_shared<MsatTerm> (env, res);
+    return make_shared_term (env, res);
   }
 }
 
@@ -1040,16 +1040,16 @@ Term MsatSolver::make_term(Op op, const TermVec & terms) const
   {
     vector<msat_term> margs;
     margs.reserve(size);
-    shared_ptr<MsatTerm> mterm;
+    MsatTerm *mterm;
 
     // skip the first term (that's actually a function)
     for (size_t i = 1; i < terms.size(); i++)
     {
-      mterm = static_pointer_cast<MsatTerm>(terms[i]);
+      mterm = dynamic_cast<MsatTerm*>(terms[i].get());
       margs.push_back(mterm->term);
     }
 
-    mterm = static_pointer_cast<MsatTerm>(terms[0]);
+    mterm = dynamic_cast<MsatTerm*>(terms[0].get());
     if (!mterm->is_uf)
     {
       string msg(
@@ -1070,7 +1070,7 @@ Term MsatSolver::make_term(Op op, const TermVec & terms) const
       }
       throw InternalSolverException(msg);
     }
-    return make_shared<MsatTerm>(env, res);
+    return make_shared_term(env, res);
   }
   else if (is_variadic(op.prim_op))
   {
@@ -1081,14 +1081,14 @@ Term MsatSolver::make_term(Op op, const TermVec & terms) const
     margs.reserve(terms.size());
     for (const auto & tt : terms)
     {
-      margs.push_back(static_pointer_cast<MsatTerm>(tt)->term);
+      margs.push_back(dynamic_cast<MsatTerm*>(tt.get())->term);
     }
     msat_term res = msat_fun(env, margs[0], margs[1]);
     for (size_t i = 2; i < margs.size(); ++i)
     {
       res = msat_fun(env, res, margs[i]);
     }
-    return make_shared<MsatTerm>(env, res);
+    return make_shared_term(env, res);
   }
   else if (op == Forall || op == Exists)
   {
@@ -1096,7 +1096,7 @@ Term MsatSolver::make_term(Op op, const TermVec & terms) const
     mterms.reserve(terms.size());
     for (const auto & tt : terms)
     {
-      mterms.push_back(static_pointer_cast<MsatTerm>(tt)->term);
+      mterms.push_back(dynamic_cast<MsatTerm*>(tt.get())->term);
     }
 
     msat_term res = mterms.back();
@@ -1114,7 +1114,7 @@ Term MsatSolver::make_term(Op op, const TermVec & terms) const
         res = msat_make_exists(env, t, res);
       }
     }
-    return make_shared<MsatTerm>(env, res);
+    return make_shared_term(env, res);
   }
   else if (op.prim_op == Distinct)
   {
@@ -1156,26 +1156,26 @@ Term MsatSolver::substitute(const Term term,
                             const UnorderedTermMap & substitution_map) const
 {
   initialize_env();
-  shared_ptr<MsatTerm> mterm = static_pointer_cast<MsatTerm>(term);
+  MsatTerm *mterm = dynamic_cast<MsatTerm*>(term.get());
 
   vector<msat_term> to_subst;
   vector<msat_term> values;
 
-  shared_ptr<MsatTerm> tmp_key;
-  shared_ptr<MsatTerm> tmp_val;
+  MsatTerm *tmp_key;
+  MsatTerm *tmp_val;
   // TODO: Fallback to parent class implementation if there are uninterpreted
   // functions
   //       in the map
   for (auto elem : substitution_map)
   {
-    tmp_key = static_pointer_cast<MsatTerm>(elem.first);
+    tmp_key = dynamic_cast<MsatTerm*>(elem.first.get());
     if (tmp_key->is_uf)
     {
       throw NotImplementedException(
           "MathSAT does not support substituting functions");
     }
     to_subst.push_back(tmp_key->term);
-    tmp_val = static_pointer_cast<MsatTerm>(elem.second);
+    tmp_val = dynamic_cast<MsatTerm*>(elem.second.get());
     if (tmp_val->is_uf)
     {
       throw NotImplementedException(
@@ -1282,8 +1282,8 @@ Result MsatInterpolatingSolver::get_interpolant(const Term & A,
     throw IncorrectUsageException("get_interpolant requires two boolean terms");
   }
 
-  msat_term mA = static_pointer_cast<MsatTerm>(A)->term;
-  msat_term mB = static_pointer_cast<MsatTerm>(B)->term;
+  msat_term mA = dynamic_cast<MsatTerm*>(A.get())->term;
+  msat_term mB = dynamic_cast<MsatTerm*>(B.get())->term;
 
   int group_A = msat_create_itp_group(env);
   int group_B = msat_create_itp_group(env);
@@ -1304,7 +1304,7 @@ Result MsatInterpolatingSolver::get_interpolant(const Term & A,
     }
     else
     {
-      out_I = make_shared<MsatTerm>(env, itp);
+      out_I = make_shared_term(env, itp);
       return Result(UNSAT);
     }
   }
@@ -1333,7 +1333,7 @@ Result MsatInterpolatingSolver::get_sequence_interpolants(
     itp_groups.push_back(grp);
     msat_set_itp_group(env, grp);
     msat_assert_formula(env,
-                        static_pointer_cast<MsatTerm>(formulae.at(k))->term);
+                        dynamic_cast<MsatTerm*>(formulae.at(k).get())->term);
   }
 
   msat_result msat_res = msat_solve(env);
@@ -1364,7 +1364,7 @@ Result MsatInterpolatingSolver::get_sequence_interpolants(
     }
     else
     {
-      out_I.push_back(make_shared<MsatTerm>(env, mI));
+      out_I.push_back(make_shared_term(env, mI));
     }
   }
 

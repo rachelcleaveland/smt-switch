@@ -104,13 +104,6 @@ const std::unordered_map<PrimOp, ::cvc5::Kind> primop2kind(
 
 /* Cvc5Solver implementation */
 
-/**
- * Makes a shared pointer from a term.
- */
-//Term make_shared_term(cvc5::Term t) {
-//  return (RachelsSharedPtr<Cvc5Term>(t)).cast_shared_pointer<AbsTerm>(); 
-//}
-
 void Cvc5Solver::set_opt(const std::string option, const std::string value)
 {
   std::string cvc5option = option;
@@ -242,9 +235,9 @@ Term Cvc5Solver::make_term(std::string val,
 
 Term Cvc5Solver::make_term(const Term & val, const Sort & sort) const
 {
-  RachelsSharedPtr<Cvc5Term> cterm = cast_ptr<Cvc5Term>(val);
+  Cvc5Term *cterm = dynamic_cast<Cvc5Term *>(val.get());
   std::shared_ptr<Cvc5Sort> csort = std::static_pointer_cast<Cvc5Sort>(sort);
-  ::cvc5::Term const_arr = solver.mkConstArray(csort->sort, cterm->term);
+  ::cvc5::Term const_arr = solver.mkConstArray(csort->sort, cterm->get_cvc5_term());
   return make_shared_term(const_arr);
 }
 
@@ -252,8 +245,8 @@ void Cvc5Solver::assert_formula(const Term & t)
 {
   try
   {
-    RachelsSharedPtr<Cvc5Term> cterm = cast_ptr<Cvc5Term>(t);
-    solver.assertFormula(cterm->term);
+    Cvc5Term *cterm = dynamic_cast<Cvc5Term*>(t.get());
+    solver.assertFormula(cterm->get_cvc5_term());
   }
   catch (::cvc5::CVC5ApiException & e)
   {
@@ -301,7 +294,8 @@ Result Cvc5Solver::check_sat_assuming(const TermVec & assumptions)
     std::shared_ptr<Cvc5Term> cterm;
     for (auto a : assumptions)
     {
-      cvc5assumps.push_back(cast_ptr<Cvc5Term>(a)->term);
+      Cvc5Term *cterm = dynamic_cast<Cvc5Term*>(a.get());
+      cvc5assumps.push_back(cterm->get_cvc5_term());
     }
     return check_sat_assuming(cvc5assumps);
   }
@@ -321,7 +315,8 @@ Result Cvc5Solver::check_sat_assuming_list(const TermList & assumptions)
     std::shared_ptr<Cvc5Term> cterm;
     for (auto a : assumptions)
     {
-      cvc5assumps.push_back(cast_ptr<Cvc5Term>(a)->term);
+      Cvc5Term *cterm = dynamic_cast<Cvc5Term*>(a.get());
+      cvc5assumps.push_back(cterm->get_cvc5_term());
     }
     return check_sat_assuming(cvc5assumps);
   }
@@ -341,7 +336,8 @@ Result Cvc5Solver::check_sat_assuming_set(const UnorderedTermSet & assumptions)
     std::shared_ptr<Cvc5Term> cterm;
     for (auto a : assumptions)
     {
-      cvc5assumps.push_back(cast_ptr<Cvc5Term>(a)->term);
+      Cvc5Term *cterm = dynamic_cast<Cvc5Term*>(a.get());
+      cvc5assumps.push_back(cterm->get_cvc5_term());
     }
     return check_sat_assuming(cvc5assumps);
   }
@@ -383,8 +379,8 @@ Term Cvc5Solver::get_value(const Term & t) const
 {
   try
   {
-    RachelsSharedPtr<Cvc5Term> cterm = cast_ptr<Cvc5Term>(t);
-    return make_shared_term(solver.getValue(cterm->term));
+    Cvc5Term *cterm = dynamic_cast<Cvc5Term *>(t.get());
+    return make_shared_term(solver.getValue(cterm->get_cvc5_term()));
   }
   catch (::cvc5::CVC5ApiException & e)
   {
@@ -399,7 +395,8 @@ UnorderedTermMap Cvc5Solver::get_array_values(const Term & arr,
   {
     UnorderedTermMap assignments;
     out_const_base = RachelsSharedPtr<AbsTerm>(); //nullptr;
-    cvc5::Term carr = cast_ptr<Cvc5Term>(arr)->term;
+    Cvc5Term *carr_ = dynamic_cast<Cvc5Term *>(arr.get());
+    cvc5::Term carr = carr_->get_cvc5_term();
     // get the array value
     // cvc5 returns a sequence of stores
     carr = solver.getValue(carr);
@@ -682,7 +679,7 @@ Term Cvc5Solver::make_symbol(const std::string name, const Sort & sort)
   {
     std::shared_ptr<Cvc5Sort> csort = std::static_pointer_cast<Cvc5Sort>(sort);
     ::cvc5::Term t = solver.mkConst(csort->sort, name);
-    Term res = make_shared_term(t); //std::make_shared<::smt::Cvc5Term>(t);
+    Term res = make_shared_term(t); 
     symbol_table[name] = res;
     return res;
   }
@@ -708,7 +705,7 @@ Term Cvc5Solver::make_param(const std::string name, const Sort & sort)
   {
     std::shared_ptr<Cvc5Sort> csort = std::static_pointer_cast<Cvc5Sort>(sort);
     ::cvc5::Term t = solver.mkVar(csort->sort, name);
-    return make_shared_term(t); //std::make_shared<::smt::Cvc5Term>(t);
+    return make_shared_term(t); 
   }
   catch (::cvc5::CVC5ApiException & e)
   {
@@ -911,11 +908,12 @@ Term Cvc5Solver::make_term(Op op, const TermVec & terms) const
   {
     std::vector<::cvc5::Term> cterms;
     cterms.reserve(terms.size());
-    RachelsSharedPtr<Cvc5Term> cterm;
+    RachelsSharedPtr<AbsTerm> cterm;
     for (auto t : terms)
     {
-      cterm = cast_ptr<Cvc5Term>(t);
-      cterms.push_back(cterm->term);
+      //cterm = cast_ptr<Cvc5Term>(t);
+      Cvc5Term *cterm_ = dynamic_cast<Cvc5Term *>(t.get());
+      cterms.push_back(cterm_->get_cvc5_term());
     }
     if (op.prim_op == Forall || op.prim_op == Exists)
     {
@@ -978,11 +976,14 @@ Term Cvc5Solver::substitute(const Term term,
 
   for (const auto & elem : substitution_map)
   {
-    keys.push_back(cast_ptr<Cvc5Term>(elem.first)->term);
-    values.push_back(cast_ptr<Cvc5Term>(elem.second)->term);
+    Cvc5Term *term1 = dynamic_cast<Cvc5Term*>(elem.first.get());
+    Cvc5Term *term2 = dynamic_cast<Cvc5Term*>(elem.second.get());
+    keys.push_back(term1->get_cvc5_term());
+    values.push_back(term2->get_cvc5_term());
   }
 
-  ::cvc5::Term cterm = cast_ptr<Cvc5Term>(term)->term;
+  Cvc5Term *cterm_ = dynamic_cast<Cvc5Term *>(term.get());
+  ::cvc5::Term cterm = cterm_->get_cvc5_term();
   return make_shared_term(cterm.substitute(keys, values));
 }
 
@@ -1049,11 +1050,11 @@ Result cvc5InterpolatingSolver::get_interpolant(const Term & A,
   {
     throw IncorrectUsageException("get_interpolant requires two boolean terms");
   }
-  RachelsSharedPtr<Cvc5Term> cA = cast_ptr<Cvc5Term>(A);
-  RachelsSharedPtr<Cvc5Term> cB =
-      cast_ptr<Cvc5Term>(make_term(Not, B));
-  solver.assertFormula(cA->term);
-  cvc5::Term I = solver.getInterpolant(cB->term);
+  Cvc5Term *cA = dynamic_cast<Cvc5Term *>(A.get());
+  const Term B_ = make_term(Not, B);
+  Cvc5Term *cB = dynamic_cast<Cvc5Term *>(B_.get());
+  solver.assertFormula(cA->get_cvc5_term());
+  cvc5::Term I = solver.getInterpolant(cB->get_cvc5_term());
   if (!I.isNull())
   {
     out_I = make_shared_term(I);

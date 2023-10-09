@@ -87,5 +87,8 @@ class Yices2Term : public AbsTerm
   friend class Yices2TermIter;
 };
 
+Term make_shared_term(term_t t);
+Term make_shared_term(term_t t, bool b);
+
 }  // namespace smt
 

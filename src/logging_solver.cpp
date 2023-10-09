@@ -42,17 +42,21 @@ const unordered_set<SortKind> supported_sortkinds_for_get_value(
  * Create a new shared pointer. 
  */
 Term make_shared_term(Term t, Sort s, Op op, TermVec tv, size_t id) {
-  std::vector<Term> vect{t}; // HACKY -- FIX THIS
+  //std::vector<Term> vect{t}; // HACKY -- FIX THIS
   // The issue is that taking in a Term t directly instead of vect
   // causes an error ('t' has incomplete type in the constructors for
   // RachelsSharedPointer and TermValue), but there is no error when
   // a Term is inside of a vector. Figure out how to avoid this hack. 
-  return (RachelsSharedPtr<LoggingTerm>(vect,s,op,tv,id)).cast_shared_pointer<AbsTerm>(); 
+  LoggingTerm *lt = new LoggingTerm(t,s,op,tv,id);
+  return RachelsSharedPtr<AbsTerm>(lt);
+  //return (RachelsSharedPtr<LoggingTerm>(vect,s,op,tv,id)).cast_shared_pointer<AbsTerm>(); 
 }
 
 Term make_shared_term(Term t, Sort s, Op o, TermVec tv, std::string name, bool b, size_t id) {
-  std::vector<Term> vect{t};
-  return (RachelsSharedPtr<LoggingTerm>(vect,s,o,tv,name,b,id)).cast_shared_pointer<AbsTerm>();
+  //std::vector<Term> vect{t};
+  LoggingTerm *lt = new LoggingTerm(t,s,o,tv,name,b,id);
+  return RachelsSharedPtr<AbsTerm>(lt);
+  //return (RachelsSharedPtr<LoggingTerm>(vect,s,o,tv,name,b,id)).cast_shared_pointer<AbsTerm>();
 }
 
 // implementations
@@ -246,7 +250,8 @@ Term LoggingSolver::make_term(const string name,
 
 Term LoggingSolver::make_term(const Term & val, const Sort & sort) const
 {
-  RachelsSharedPtr<LoggingTerm> lval = cast_ptr<LoggingTerm>(val);
+  LoggingTerm *lval = dynamic_cast<LoggingTerm *>(val.get());
+  //RachelsSharedPtr<LoggingTerm> lval = cast_ptr<LoggingTerm>(val);
   shared_ptr<LoggingSort> lsort = static_pointer_cast<LoggingSort>(sort);
   Term wrapped_res =
       wrapped_solver->make_term(lval->wrapped_term, lsort->wrapped_sort);
@@ -331,7 +336,8 @@ Term LoggingSolver::make_param(const string name, const Sort & sort)
 
 Term LoggingSolver::make_term(const Op op, const Term & t) const
 {
-  RachelsSharedPtr<LoggingTerm> lt = cast_ptr<LoggingTerm>(t);
+  LoggingTerm *lt = dynamic_cast<LoggingTerm *>(t.get());
+  //RachelsSharedPtr<LoggingTerm> lt = cast_ptr<LoggingTerm>(t);
   Term wrapped_res = wrapped_solver->make_term(op, lt->wrapped_term);
   Sort res_logging_sort = compute_sort(op, this, { t->get_sort() });
 
@@ -358,8 +364,10 @@ Term LoggingSolver::make_term(const Op op,
                               const Term & t1,
                               const Term & t2) const
 {
-  RachelsSharedPtr<LoggingTerm> lt1 = cast_ptr<LoggingTerm>(t1);
-  RachelsSharedPtr<LoggingTerm> lt2 = cast_ptr<LoggingTerm>(t2);
+  LoggingTerm *lt1 = dynamic_cast<LoggingTerm *>(t1.get());
+  //RachelsSharedPtr<LoggingTerm> lt1 = cast_ptr<LoggingTerm>(t1);
+  LoggingTerm *lt2 = dynamic_cast<LoggingTerm *>(t2.get());
+  //RachelsSharedPtr<LoggingTerm> lt2 = cast_ptr<LoggingTerm>(t2);
   Term wrapped_res =
       wrapped_solver->make_term(op, lt1->wrapped_term, lt2->wrapped_term);
   Sort res_logging_sort =
@@ -389,9 +397,9 @@ Term LoggingSolver::make_term(const Op op,
                               const Term & t2,
                               const Term & t3) const
 {
-  RachelsSharedPtr<LoggingTerm> lt1 = cast_ptr<LoggingTerm>(t1);
-  RachelsSharedPtr<LoggingTerm> lt2 = cast_ptr<LoggingTerm>(t2);
-  RachelsSharedPtr<LoggingTerm> lt3 = cast_ptr<LoggingTerm>(t3);
+  LoggingTerm *lt1 = dynamic_cast<LoggingTerm *>(t1.get());
+  LoggingTerm *lt2 = dynamic_cast<LoggingTerm *>(t2.get());
+  LoggingTerm *lt3 = dynamic_cast<LoggingTerm *>(t3.get());
   Term wrapped_res = wrapped_solver->make_term(
       op, lt1->wrapped_term, lt2->wrapped_term, lt3->wrapped_term);
   Sort res_logging_sort = compute_sort(
@@ -423,7 +431,7 @@ Term LoggingSolver::make_term(const Op op, const TermVec & terms) const
   TermVec lterms;
   for (auto tt : terms)
   {
-    RachelsSharedPtr<LoggingTerm> ltt = cast_ptr<LoggingTerm>(tt);
+    LoggingTerm *ltt = dynamic_cast<LoggingTerm *>(tt.get());
     lterms.push_back(ltt->wrapped_term);
 
     // check that children are already in the hash table
@@ -460,7 +468,7 @@ Term LoggingSolver::get_value(const Term & t) const
         "LoggingSolver does not support get_value for " + smt::to_string(sk));
   }
 
-  RachelsSharedPtr<LoggingTerm> lt = cast_ptr<LoggingTerm>(t);
+  LoggingTerm *lt = dynamic_cast<LoggingTerm *>(t.get());
   if (t->get_sort()->get_sort_kind() != ARRAY)
   {
     Term wrapped_val = wrapped_solver->get_value(lt->wrapped_term);
@@ -528,7 +536,7 @@ UnorderedTermMap LoggingSolver::get_array_values(const Term & arr,
   Sort arrsort = arr->get_sort();
   Sort idxsort = arrsort->get_indexsort();
   Sort elemsort = arrsort->get_elemsort();
-  RachelsSharedPtr<LoggingTerm> larr = cast_ptr<LoggingTerm>(arr);
+  LoggingTerm *larr = dynamic_cast<LoggingTerm *>(arr.get());
   UnorderedTermMap assignments;
   Term wrapped_out_const_base;
   UnorderedTermMap wrapped_assignments = wrapped_solver->get_array_values(
@@ -606,7 +614,7 @@ void LoggingSolver::set_logic(const std::string logic)
 
 void LoggingSolver::assert_formula(const Term & t)
 {
-  RachelsSharedPtr<LoggingTerm> lt = cast_ptr<LoggingTerm>(t);
+  LoggingTerm *lt = dynamic_cast<LoggingTerm*>(t.get());
   wrapped_solver->assert_formula(lt->wrapped_term);
 }
 
@@ -617,10 +625,10 @@ Result LoggingSolver::check_sat_assuming(const TermVec & assumptions)
   // only needs to remember the latest set of assumptions
   assumption_cache->clear();
   TermVec lassumps;
-  RachelsSharedPtr<LoggingTerm> la;
+  LoggingTerm *la;
   for (auto a : assumptions)
   {
-    la = cast_ptr<LoggingTerm>(a);
+    la = dynamic_cast<LoggingTerm *>(a.get());
     lassumps.push_back(la->wrapped_term);
     // store a mapping from the wrapped term to the logging term
     (*assumption_cache)[la->wrapped_term] = a;
@@ -633,10 +641,10 @@ Result LoggingSolver::check_sat_assuming_list(const TermList & assumptions)
   // only needs to remember the latest set of assumptions
   assumption_cache->clear();
   TermList lassumps;
-  RachelsSharedPtr<LoggingTerm> la;
+  LoggingTerm *la;
   for (auto a : assumptions)
   {
-    la = cast_ptr<LoggingTerm>(a);
+    la = dynamic_cast<LoggingTerm *>(a.get());
     lassumps.push_back(la->wrapped_term);
     // store a mapping from the wrapped term to the logging term
     (*assumption_cache)[la->wrapped_term] = a;
@@ -650,10 +658,10 @@ Result LoggingSolver::check_sat_assuming_set(
   // only needs to remember the latest set of assumptions
   assumption_cache->clear();
   UnorderedTermSet lassumps;
-  RachelsSharedPtr<LoggingTerm> la;
+  LoggingTerm *la;
   for (auto a : assumptions)
   {
-    la = cast_ptr<LoggingTerm>(a);
+    la = dynamic_cast<LoggingTerm *>(a.get());
     lassumps.insert(la->wrapped_term);
     // store a mapping from the wrapped term to the logging term
     (*assumption_cache)[la->wrapped_term] = a;

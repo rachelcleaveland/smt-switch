@@ -59,6 +59,8 @@ TEST_P(UnitSubstituteTests, CheckSubstitution1)
   UnorderedTermMap subs_map({ { x, a }, { y, b } });
   Term apb = s->substitute(xpy, subs_map);
   Term apb_expect = s->make_term(BVAdd, a, b);
+
+  std::cout << xpy->to_string() << " " << apb->to_string() << std::endl;
   EXPECT_EQ(apb, apb_expect);
 }
 

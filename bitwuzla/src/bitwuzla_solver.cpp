@@ -126,7 +126,7 @@ void BzlaSolver::set_logic(const string logic)
 
 void BzlaSolver::assert_formula(const Term & t)
 {
-  shared_ptr<BzlaTerm> bterm = static_pointer_cast<BzlaTerm>(t);
+  BzlaTerm *bterm = dynamic_cast<BzlaTerm*>(t.get());
   bitwuzla_assert(bzla, bterm->term);
 }
 
@@ -186,8 +186,8 @@ uint64_t BzlaSolver::get_context_level() const { return context_level; }
 
 Term BzlaSolver::get_value(const Term & t) const
 {
-  shared_ptr<BzlaTerm> bterm = static_pointer_cast<BzlaTerm>(t);
-  return make_shared<BzlaTerm>(bitwuzla_get_value(bzla, bterm->term));
+  BzlaTerm *bterm = dynamic_cast<BzlaTerm*>(t.get());
+  return make_shared_term(bitwuzla_get_value(bzla, bterm->term));
 }
 
 UnorderedTermMap BzlaSolver::get_array_values(const Term & arr,
@@ -210,7 +210,7 @@ void BzlaSolver::get_unsat_assumptions(UnorderedTermSet & out)
   for (size_t i = 0; i < size; ++i)
   {
     assert(*bcore);
-    out.insert(make_shared<BzlaTerm>(*bcore));
+    out.insert(make_shared_term(*bcore));
     bcore++;
   }
 }
@@ -415,11 +415,11 @@ Term BzlaSolver::make_term(bool b) const
 {
   if (b)
   {
-    return make_shared<BzlaTerm>(bitwuzla_mk_true(bzla));
+    return make_shared_term(bitwuzla_mk_true(bzla));
   }
   else
   {
-    return make_shared<BzlaTerm>(bitwuzla_mk_false(bzla));
+    return make_shared_term(bitwuzla_mk_false(bzla));
   }
 }
 
@@ -434,7 +434,7 @@ Term BzlaSolver::make_term(int64_t i, const Sort & sort) const
   }
 
   shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
-  return make_shared<BzlaTerm>(
+  return make_shared_term(
       bitwuzla_mk_bv_value_uint64(bzla, bsort->sort, i));
 }
 
@@ -458,7 +458,7 @@ Term BzlaSolver::make_term(const std::string val,
   }
 
   shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
-  return make_shared<BzlaTerm>(
+  return make_shared_term(
       bitwuzla_mk_bv_value(bzla, bsort->sort, val.c_str(), baseit->second));
 }
 
@@ -477,9 +477,9 @@ Term BzlaSolver::make_term(const Term & val, const Sort & sort) const
         "Value used to create constant array must match element sort.");
   }
 
-  shared_ptr<BzlaTerm> bterm = static_pointer_cast<BzlaTerm>(val);
-  shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
-  return make_shared<BzlaTerm>(
+  BzlaTerm *bterm = dynamic_cast<BzlaTerm*>(val.get());
+  BzlaSort *bsort = dynamic_cast<BzlaSort*>(sort.get());
+  return make_shared_term(
       bitwuzla_mk_const_array(bzla, bsort->sort, bterm->term));
 }
 
@@ -491,7 +491,7 @@ Term BzlaSolver::make_symbol(const string name, const Sort & sort)
   }
   shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
   Term sym =
-      make_shared<BzlaTerm>(bitwuzla_mk_const(bzla, bsort->sort, name.c_str()));
+      make_shared_term(bitwuzla_mk_const(bzla, bsort->sort, name.c_str()));
   symbol_table[name] = sym;
   return sym;
 }
@@ -509,13 +509,13 @@ Term BzlaSolver::get_symbol(const string & name)
 Term BzlaSolver::make_param(const std::string name, const Sort & sort)
 {
   shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
-  return make_shared<BzlaTerm>(
+  return make_shared_term(
       bitwuzla_mk_var(bzla, bsort->sort, name.c_str()));
 }
 
 Term BzlaSolver::make_term(Op op, const Term & t) const
 {
-  shared_ptr<BzlaTerm> bterm = static_pointer_cast<BzlaTerm>(t);
+  BzlaTerm *bterm = dynamic_cast<BzlaTerm*>(t.get());
 
   auto it = op2bkind.find(op.prim_op);
   if (it == op2bkind.end())
@@ -527,25 +527,25 @@ Term BzlaSolver::make_term(Op op, const Term & t) const
 
   if (!op.num_idx)
   {
-    return make_shared<BzlaTerm>(bitwuzla_mk_term1(bzla, bkind, bterm->term));
+    return make_shared_term(bitwuzla_mk_term1(bzla, bkind, bterm->term));
   }
   else if (op.num_idx == 1)
   {
-    return make_shared<BzlaTerm>(
+    return make_shared_term(
         bitwuzla_mk_term1_indexed1(bzla, bkind, bterm->term, op.idx0));
   }
   else
   {
     assert(op.num_idx == 2);
-    return make_shared<BzlaTerm>(
+    return make_shared_term(
         bitwuzla_mk_term1_indexed2(bzla, bkind, bterm->term, op.idx0, op.idx1));
   }
 }
 
 Term BzlaSolver::make_term(Op op, const Term & t0, const Term & t1) const
 {
-  shared_ptr<BzlaTerm> bterm0 = static_pointer_cast<BzlaTerm>(t0);
-  shared_ptr<BzlaTerm> bterm1 = static_pointer_cast<BzlaTerm>(t1);
+  BzlaTerm *bterm0 = dynamic_cast<BzlaTerm*>(t0.get());
+  BzlaTerm *bterm1 = dynamic_cast<BzlaTerm*>(t1.get());
 
   auto it = op2bkind.find(op.prim_op);
   if (it == op2bkind.end())
@@ -557,18 +557,18 @@ Term BzlaSolver::make_term(Op op, const Term & t0, const Term & t1) const
 
   if (!op.num_idx)
   {
-    return make_shared<BzlaTerm>(
+    return make_shared_term(
         bitwuzla_mk_term2(bzla, bkind, bterm0->term, bterm1->term));
   }
   else if (op.num_idx == 1)
   {
-    return make_shared<BzlaTerm>(bitwuzla_mk_term2_indexed1(
+    return make_shared_term(bitwuzla_mk_term2_indexed1(
         bzla, bkind, bterm0->term, bterm1->term, op.idx0));
   }
   else
   {
     assert(op.num_idx == 2);
-    return make_shared<BzlaTerm>(bitwuzla_mk_term2_indexed2(
+    return make_shared_term(bitwuzla_mk_term2_indexed2(
         bzla, bkind, bterm0->term, bterm1->term, op.idx0, op.idx1));
   }
 }
@@ -586,9 +586,9 @@ Term BzlaSolver::make_term(Op op,
     return make_term(op, {t0, t1, t2});
   }
 
-  shared_ptr<BzlaTerm> bterm0 = static_pointer_cast<BzlaTerm>(t0);
-  shared_ptr<BzlaTerm> bterm1 = static_pointer_cast<BzlaTerm>(t1);
-  shared_ptr<BzlaTerm> bterm2 = static_pointer_cast<BzlaTerm>(t2);
+  BzlaTerm *bterm0 = dynamic_cast<BzlaTerm*>(t0.get());
+  BzlaTerm *bterm1 = dynamic_cast<BzlaTerm*>(t1.get());
+  BzlaTerm *bterm2 = dynamic_cast<BzlaTerm*>(t2.get());
 
   auto it = op2bkind.find(op.prim_op);
   if (it == op2bkind.end())
@@ -600,7 +600,7 @@ Term BzlaSolver::make_term(Op op,
 
   if (!op.num_idx)
   {
-    return make_shared<BzlaTerm>(bitwuzla_mk_term3(
+    return make_shared_term(bitwuzla_mk_term3(
         bzla, bkind, bterm0->term, bterm1->term, bterm2->term));
   }
   else
@@ -614,7 +614,7 @@ Term BzlaSolver::make_term(Op op,
       indices.push_back(op.idx1);
     }
 
-    return make_shared<BzlaTerm>(bitwuzla_mk_term_indexed(bzla,
+    return make_shared_term(bitwuzla_mk_term_indexed(bzla,
                                                           bkind,
                                                           bitwuzla_terms.size(),
                                                           bitwuzla_terms.data(),
@@ -628,7 +628,7 @@ Term BzlaSolver::make_term(Op op, const TermVec & terms) const
   vector<const BitwuzlaTerm *> bitwuzla_terms;
   for (auto t : terms)
   {
-    bitwuzla_terms.push_back(static_pointer_cast<BzlaTerm>(t)->term);
+    bitwuzla_terms.push_back(dynamic_cast<BzlaTerm*>(t.get())->term);
   }
 
   auto it = op2bkind.find(op.prim_op);
@@ -641,7 +641,7 @@ Term BzlaSolver::make_term(Op op, const TermVec & terms) const
 
   if (!op.num_idx)
   {
-    return make_shared<BzlaTerm>(bitwuzla_mk_term(
+    return make_shared_term(bitwuzla_mk_term(
         bzla, bkind, bitwuzla_terms.size(), bitwuzla_terms.data()));
   }
   else
@@ -652,7 +652,7 @@ Term BzlaSolver::make_term(Op op, const TermVec & terms) const
     {
       indices.push_back(op.idx1);
     }
-    return make_shared<BzlaTerm>(bitwuzla_mk_term_indexed(bzla,
+    return make_shared_term(bitwuzla_mk_term_indexed(bzla,
                                                           bkind,
                                                           bitwuzla_terms.size(),
                                                           bitwuzla_terms.data(),
@@ -675,7 +675,7 @@ void BzlaSolver::reset_assertions()
 Term BzlaSolver::substitute(const Term term,
                             const UnorderedTermMap & substitution_map) const
 {
-  shared_ptr<BzlaTerm> bterm = static_pointer_cast<BzlaTerm>(term);
+  BzlaTerm *bterm = dynamic_cast<BzlaTerm*>(term.get());
   size_t smap_size = substitution_map.size();
   vector<const BitwuzlaTerm *> map_keys;
   map_keys.reserve(smap_size);
@@ -688,10 +688,10 @@ Term BzlaSolver::substitute(const Term term,
       throw SmtException(
           "Bitwuzla backend doesn't support substitution with non symbol keys");
     }
-    map_keys.push_back(static_pointer_cast<BzlaTerm>(elem.first)->term);
-    map_vals.push_back(static_pointer_cast<BzlaTerm>(elem.second)->term);
+    map_keys.push_back(dynamic_cast<BzlaTerm*>(elem.first.get())->term);
+    map_vals.push_back(dynamic_cast<BzlaTerm*>(elem.second.get())->term);
   }
-  return make_shared<BzlaTerm>(bitwuzla_substitute_term(
+  return make_shared_term(bitwuzla_substitute_term(
       bzla, bterm->term, map_keys.size(), map_keys.data(), map_vals.data()));
 }
 
@@ -708,7 +708,7 @@ TermVec BzlaSolver::substitute_terms(
   map_keys.reserve(smap_size);
   for (auto t : terms)
   {
-    bterms.push_back(static_pointer_cast<BzlaTerm>(t)->term);
+    bterms.push_back(dynamic_cast<BzlaTerm*>(t.get())->term);
   }
   for (auto elem : substitution_map)
   {
@@ -717,8 +717,8 @@ TermVec BzlaSolver::substitute_terms(
       throw SmtException(
           "Bitwuzla backend doesn't support substitution with non symbol keys");
     }
-    map_keys.push_back(static_pointer_cast<BzlaTerm>(elem.first)->term);
-    map_vals.push_back(static_pointer_cast<BzlaTerm>(elem.second)->term);
+    map_keys.push_back(dynamic_cast<BzlaTerm*>(elem.first.get())->term);
+    map_vals.push_back(dynamic_cast<BzlaTerm*>(elem.second.get())->term);
   }
 
   // bterms array is updated in place
@@ -732,7 +732,7 @@ TermVec BzlaSolver::substitute_terms(
   res.reserve(terms_size);
   for (auto t : bterms)
   {
-    res.push_back(make_shared<BzlaTerm>(t));
+    res.push_back(make_shared_term(t));
   }
   return res;
 }

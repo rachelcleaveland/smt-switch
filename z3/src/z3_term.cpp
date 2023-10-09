@@ -10,6 +10,27 @@ using namespace std;
 
 namespace smt {
 
+/**
+ * Makes a shared pointer from a term.
+ */
+Term make_shared_term(z3::expr t, z3::context & c) {
+  Z3Term *zterm = new Z3Term(t,c);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(zterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
+Term make_shared_term(z3::expr t, z3::context & c, bool b) {
+  Z3Term *zterm = new Z3Term(t,c,b);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(zterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
+Term make_shared_term(z3::func_decl f, z3::context & c) {
+  Z3Term *zterm = new Z3Term(f,c);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(zterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
 // Z3TermIter implementation
 
 Z3TermIter & Z3TermIter::operator=(const Z3TermIter & it)
@@ -30,13 +51,13 @@ const Term Z3TermIter::operator*()
                          && !term.is_const();
   if (!pos && is_function_app)
   {
-    return std::make_shared<Z3Term>(term.decl(), term.ctx());
+    return make_shared_term(term.decl(), term.ctx());
   }
   else
   {
     uint32_t actual_idx = is_function_app ? pos - 1 : pos;
     expr z_child = term.arg(actual_idx);
-    return std::make_shared<Z3Term>(z_child, z_child.ctx());
+    return make_shared_term(z_child, z_child.ctx());
   }
 }
 
@@ -102,7 +123,8 @@ std::size_t Z3Term::get_id() const
 
 bool Z3Term::compare(const Term & absterm) const
 {
-  std::shared_ptr<Z3Term> zs = std::static_pointer_cast<Z3Term>(absterm);
+  //std::shared_ptr<Z3Term> zs = std::static_pointer_cast<Z3Term>(absterm);
+  Z3Term *zs = dynamic_cast<Z3Term *>(absterm.get());
   if (is_function && zs->is_function)
   {
     return z_func.hash() == (zs->z_func).hash();

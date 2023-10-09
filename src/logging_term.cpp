@@ -87,7 +87,7 @@ bool LoggingTerm::compare(const Term & t) const
     return false;
   }
 
-  RachelsSharedPtr<LoggingTerm> lt = t.cast_shared_pointer<LoggingTerm>();
+  LoggingTerm *lt = dynamic_cast<LoggingTerm*>(t.get());
 
   // compare wrapped term and the LoggingSort
   // this handles values (e.g. null operators and no children)
@@ -190,7 +190,6 @@ TermIter LoggingTerm::end()
 // dispatched to underlying term
 
 size_t LoggingTerm::hash() const { 
-  std::cout << "logging_term.cpp: hash" << std::endl;
   return wrapped_term->hash(); }
 
 // check if op is null because a non-value

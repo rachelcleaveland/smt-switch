@@ -95,4 +95,6 @@ class BzlaTerm : public AbsTerm
   friend class BzlaTermIter;
 };
 
+Term make_shared_term(const BitwuzlaTerm * t);
+
 }  // namespace smt

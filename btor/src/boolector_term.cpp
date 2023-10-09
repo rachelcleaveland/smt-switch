@@ -77,6 +77,15 @@ const std::unordered_map<BtorNodeKind, PrimOp> btorkind2primop({
     // {BTOR_NUM_OPS_NOE} // should never be used
 });
 
+/**
+ * Make a shared pointer to a term.
+ */
+Term make_shared_term(Btor * t, BoolectorNode * n) {
+  BoolectorTerm *bterm = new BoolectorTerm(t,n);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(bterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
 // helpers
 Op lookup_op(Btor * btor, BoolectorNode * n)
 {
@@ -145,7 +154,7 @@ const Term BoolectorTermIter::operator*()
   btor_node_inc_ext_ref_counter(btor, res);
 
   BoolectorNode * node = BTOR_EXPORT_BOOLECTOR_NODE(res);
-  return std::make_shared<BoolectorTerm> (btor, node);
+  return make_shared_term(btor, node);
 };
 
 TermIterBase * BoolectorTermIter::clone() const
@@ -203,8 +212,7 @@ std::size_t BoolectorTerm::get_id() const { return (std::size_t)node; };
 
 bool BoolectorTerm::compare(const Term & absterm) const
 {
-  std::shared_ptr<BoolectorTerm> other =
-      std::static_pointer_cast<BoolectorTerm>(absterm);
+  BoolectorTerm *other = dynamic_cast<BoolectorTerm*>(absterm.get());
   return this->node == other->node;
 }
 

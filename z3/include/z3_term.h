@@ -131,4 +131,8 @@ class Z3Term : public AbsTerm
   friend class Z3TermIter;
 };
 
+Term make_shared_term(z3::expr t, z3::context & c);
+Term make_shared_term(z3::expr t, z3::context & c, bool b);
+Term make_shared_term(z3::func_decl f, z3::context & c);
+
 }  // namespace smt

@@ -113,5 +113,8 @@ class MsatTerm : public AbsTerm
   friend class MsatInterpolatingSolver;
 };
 
+Term make_shared_term(msat_env e, msat_term t);
+Term make_shared_term(msat_env e, msat_decl d);
+
 }  // namespace smt
 

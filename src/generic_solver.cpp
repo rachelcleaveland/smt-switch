@@ -66,22 +66,16 @@ std::string & trim(std::string & str)
 
 Term make_shared_term(Sort sort, Op op, TermVec t, std::string name) {
   //TermTest r = TestClass<GenericTerm>(t[0].get()); 
-  return (RachelsSharedPtr<GenericTerm>(sort,op,t,name)).cast_shared_pointer<AbsTerm>(); 
+  GenericTerm *gt = new GenericTerm(sort,op,t,name);
+  return (RachelsSharedPtr<AbsTerm>(gt)); 
   //return std::make_shared<Cvc5Term>(t);
 }
 
 Term make_shared_term(Sort sort, Op op, TermVec t, std::string name, bool b) {
-  return (RachelsSharedPtr<GenericTerm>(sort,op,t,name,b)).cast_shared_pointer<AbsTerm>(); 
+  GenericTerm *gt = new GenericTerm(sort,op,t,name,b);
+  return (RachelsSharedPtr<AbsTerm>(gt)); 
   //return std::make_shared<Cvc5Term>(t);
 }
-
-/*
-RachelsSharedPtr<GenericTerm> cast_ptr(Term t) {
-  return t.cast_shared_pointer<GenericTerm>();
-  //return std::static_pointer_cast<Cvc5Term>(t);
-
-}
-*/
 
 // class methods implementation
 GenericSolver::GenericSolver(string path,
@@ -116,8 +110,12 @@ GenericSolver::GenericSolver(string path,
   }
   term_counter = new uint;
   //allocate memory for the buffers
-  write_buf = new char[write_buf_size];
-  read_buf = new char[read_buf_size];
+  //write_buf = new char[write_buf_size];
+  //read_buf = new char[read_buf_size];
+  write_buf = new char[write_buf_size + 1];
+  write_buf[write_buf_size] = '\0';
+  read_buf = new char[read_buf_size + 1];
+  read_buf[read_buf_size] = '\0';
 
   // sure allocation was successful
   assert(write_buf != NULL);
@@ -136,8 +134,8 @@ GenericSolver::GenericSolver(string path,
 
 GenericSolver::~GenericSolver() {
   //deallocate the buffers memory
-  delete write_buf;
-  delete read_buf;
+  delete[] write_buf;
+  delete[] read_buf;
   delete term_counter;
   // close the solver process
   close_solver();
@@ -343,7 +341,8 @@ void GenericSolver::define_fun(std::string name,
 std::string GenericSolver::to_smtlib_def(Term term) const
 {
   // cast to generic term
-  RachelsSharedPtr<GenericTerm> gt = cast_ptr<GenericTerm>(term);
+  //RachelsSharedPtr<GenericTerm> gt = cast_ptr<GenericTerm>(term);
+  GenericTerm *gt = dynamic_cast<GenericTerm *>(term.get());;
   bool nullary_constructor = false;
   // generic terms with no operators are represented by their
   // name.
@@ -757,7 +756,8 @@ std::string GenericSolver::get_name(Term term) const
 Term GenericSolver::store_term(Term term) const
 {
   // cast the term to a GenericTerm
-  RachelsSharedPtr<GenericTerm> gterm = cast_ptr<GenericTerm>(term);
+  //RachelsSharedPtr<GenericTerm> gterm = cast_ptr<GenericTerm>(term);
+  GenericTerm *gterm = dynamic_cast<GenericTerm*>(term.get());
   // store the term in the maps in case it is not there already
   if (term_name_map->find(term) == term_name_map->end())
   {
@@ -1277,7 +1277,8 @@ void GenericSolver::set_logic(const std::string logic)
 void GenericSolver::assert_formula(const Term & t)
 {
   // cast to generic term, as we need to print it to the solver
-  RachelsSharedPtr<GenericTerm> lt = cast_ptr<GenericTerm>(t);
+  //RachelsSharedPtr<GenericTerm> lt = cast_ptr<GenericTerm>(t);
+  GenericTerm *lt = dynamic_cast<GenericTerm *>(t.get());
 
   // obtain the name of the term from the internal map
   assert(term_name_map->find(t) != term_name_map->end());

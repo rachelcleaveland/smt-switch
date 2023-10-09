@@ -126,5 +126,7 @@ class BoolectorTerm : public AbsTerm
   friend class BoolectorTermIter;
 };
 
+Term make_shared_term(Btor * t, BoolectorNode * n);
+
 }  // namespace smt
 

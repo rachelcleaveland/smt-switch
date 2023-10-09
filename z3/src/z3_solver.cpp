@@ -216,7 +216,7 @@ Term Z3Solver::make_term(bool b) const
     z_term = ctx.bool_val(true);
   }
 
-  return std::make_shared<Z3Term>(z_term, ctx);
+  return make_shared_term(z_term, ctx);
 }
 
 Sort Z3Solver::make_sort(const DatatypeDecl & d) const
@@ -290,7 +290,7 @@ Term Z3Solver::make_term(int64_t i, const Sort & sort) const
     throw IncorrectUsageException(msg);
   }
 
-  return std::make_shared<Z3Term>(z_term, ctx);
+  return make_shared_term(z_term, ctx);
 }
 
 Term Z3Solver::make_term(const std::string val,
@@ -345,12 +345,12 @@ Term Z3Solver::make_term(const std::string val,
     throw IncorrectUsageException(msg);
   }
 
-  return std::make_shared<Z3Term>(z_term, ctx);
+  return make_shared_term(z_term, ctx);
 }
 
 Term Z3Solver::make_term(const Term & val, const Sort & sort) const
 {
-  std::shared_ptr<Z3Term> zterm = std::static_pointer_cast<Z3Term>(val);
+  Z3Term* zterm = dynamic_cast<Z3Term *>(val.get());
   std::shared_ptr<Z3Sort> zsort = std::static_pointer_cast<Z3Sort>(sort);
 
   if (zsort->is_function || zterm->is_function)
@@ -363,12 +363,12 @@ Term Z3Solver::make_term(const Term & val, const Sort & sort) const
 
   Z3_ast c_array = Z3_mk_const_array(ctx, arrtype.array_domain(), zterm->term);
   expr final = to_expr(ctx, c_array);
-  return std::make_shared<Z3Term>(final, ctx);
+  return make_shared_term(final, ctx);
 }
 
 void Z3Solver::assert_formula(const Term & t)
 {
-  std::shared_ptr<Z3Term> zterm = std::static_pointer_cast<Z3Term>(t);
+  Z3Term *zterm = dynamic_cast<Z3Term *>(t.get());
   if (zterm->is_function)
   {
     throw IncorrectUsageException(
@@ -403,10 +403,10 @@ Result Z3Solver::check_sat_assuming(const TermVec & assumptions)
 {
   z3::expr_vector z3assumps(ctx);
 
-  shared_ptr<Z3Term> za;
+  Z3Term *za;
   for (auto a : assumptions)
   {
-    za = static_pointer_cast<Z3Term>(a);
+    za = dynamic_cast<Z3Term*>(a.get());
     if (za->is_function)
     {
       throw IncorrectUsageException(
@@ -422,10 +422,10 @@ Result Z3Solver::check_sat_assuming_list(const TermList & assumptions)
 {
   z3::expr_vector z3assumps(ctx);
 
-  shared_ptr<Z3Term> za;
+  Z3Term *za;
   for (auto a : assumptions)
   {
-    za = static_pointer_cast<Z3Term>(a);
+    za = dynamic_cast<Z3Term*>(a.get());
     if (za->is_function)
     {
       throw IncorrectUsageException(
@@ -441,10 +441,10 @@ Result Z3Solver::check_sat_assuming_set(const UnorderedTermSet & assumptions)
 {
   z3::expr_vector z3assumps(ctx);
 
-  shared_ptr<Z3Term> za;
+  Z3Term *za;
   for (auto a : assumptions)
   {
-    za = static_pointer_cast<Z3Term>(a);
+    za = dynamic_cast<Z3Term*>(a.get());
     if (za->is_function)
     {
       throw IncorrectUsageException(
@@ -475,14 +475,14 @@ uint64_t Z3Solver::get_context_level() const { return context_level; }
 
 Term Z3Solver::get_value(const Term & t) const
 {
-  shared_ptr<Z3Term> zterm = static_pointer_cast<Z3Term>(t);
+  Z3Term *zterm = dynamic_cast<Z3Term*>(t.get());
   if (zterm->is_function)
   {
     throw IncorrectUsageException("Cannot evaluate a function.");
   }
   z3::model model = slv.get_model();
   expr eval = model.eval(zterm->term, true);
-  return std::make_shared<Z3Term>(eval, ctx);
+  return make_shared_term(eval, ctx);
 }
 
 UnorderedTermMap Z3Solver::get_array_values(const Term & arr,
@@ -499,7 +499,7 @@ void Z3Solver::get_assertions(TermVec & out)
   for (size_t i = 0; i < Z3_ast_vector_size(ctx,vec); i++) 
   {
     z3::expr t = to_expr(ctx,Z3_ast_vector_get(ctx,vec,i));
-    Term t_term = std::make_shared<Z3Term>(t,ctx);
+    Term t_term = make_shared_term(t,ctx);
     out.push_back(t_term);
   }
 }
@@ -516,7 +516,7 @@ void Z3Solver::get_unsat_assumptions(UnorderedTermSet & out)
   expr_vector core = slv.unsat_core();
   for (const auto & c : core)
   {
-    out.insert(std::make_shared<Z3Term>(c, ctx));
+    out.insert(make_shared_term(c, ctx));
   }
 }
 
@@ -698,14 +698,14 @@ Term Z3Solver::make_symbol(const std::string name, const Sort & sort)
     }
 
     func_decl z_func = ctx.function(c, domain, sort_func.range());
-    sym = std::make_shared<Z3Term>(z_func, ctx);
+    sym = make_shared_term(z_func, ctx);
   }
   else
   {
     // nb this is creating an expr
     expr z_term = ctx.constant(z_name, zsort->type);
 
-    sym = std::make_shared<Z3Term>(z_term, ctx);
+    sym = make_shared_term(z_term, ctx);
   }
   assert(sym);
   symbol_table[name] = sym;
@@ -735,12 +735,12 @@ Term Z3Solver::make_param(const std::string name, const Sort & sort)
 
   expr z_term = ctx.constant(z_name, zsort->type);
   // mark as a parameter by passing true
-  return std::make_shared<Z3Term>(z_term, ctx, true);
+  return make_shared_term(z_term, ctx, true);
 }
 
 Term Z3Solver::make_term(Op op, const Term & t) const
 {
-  shared_ptr<Z3Term> zterm = static_pointer_cast<Z3Term>(t);
+  Z3Term *zterm = dynamic_cast<Z3Term*>(t.get());
   Z3_ast res;
 
   if (zterm->is_function)
@@ -834,13 +834,13 @@ Term Z3Solver::make_term(Op op, const Term & t) const
     throw IncorrectUsageException(msg);
   }
 
-  return std::make_shared<Z3Term>(to_expr(ctx, res), ctx);
+  return make_shared_term(to_expr(ctx, res), ctx);
 }
 
 Term Z3Solver::make_term(Op op, const Term & t0, const Term & t1) const
 {
-  shared_ptr<Z3Term> zterm0 = static_pointer_cast<Z3Term>(t0);
-  shared_ptr<Z3Term> zterm1 = static_pointer_cast<Z3Term>(t1);
+  Z3Term *zterm0 = dynamic_cast<Z3Term*>(t0.get());
+  Z3Term *zterm1 = dynamic_cast<Z3Term*>(t1.get());
   Z3_ast res;
 
   if (zterm0->is_function || zterm1->is_function)
@@ -869,16 +869,16 @@ Term Z3Solver::make_term(Op op, const Term & t0, const Term & t1) const
     else if (op == Forall || op == Exists)
     {
       z3::expr_vector zparams(ctx);
-      zparams.push_back(static_pointer_cast<Z3Term>(t0)->term);
-      z3::expr zbody = static_pointer_cast<Z3Term>(t1)->term;
+      zparams.push_back(dynamic_cast<Z3Term*>(t0.get())->term);
+      z3::expr zbody = dynamic_cast<Z3Term*>(t1.get())->term;
       if (op == Forall)
       {
-        return make_shared<Z3Term>(forall(zparams, zbody), ctx);
+        return make_shared_term(forall(zparams, zbody), ctx);
       }
       else
       {
         assert(op == Exists);
-        return make_shared<Z3Term>(exists(zparams, zbody), ctx);
+        return make_shared_term(exists(zparams, zbody), ctx);
       }
     }
     else
@@ -896,7 +896,7 @@ Term Z3Solver::make_term(Op op, const Term & t0, const Term & t1) const
     throw IncorrectUsageException(msg);
   }
 
-  return std::make_shared<Z3Term>(to_expr(ctx, res), ctx);
+  return make_shared_term(to_expr(ctx, res), ctx);
 }
 
 Term Z3Solver::make_term(Op op,
@@ -904,9 +904,9 @@ Term Z3Solver::make_term(Op op,
                          const Term & t1,
                          const Term & t2) const
 {
-  shared_ptr<Z3Term> zterm0 = static_pointer_cast<Z3Term>(t0);
-  shared_ptr<Z3Term> zterm1 = static_pointer_cast<Z3Term>(t1);
-  shared_ptr<Z3Term> zterm2 = static_pointer_cast<Z3Term>(t2);
+  Z3Term *zterm0 = dynamic_cast<Z3Term*>(t0.get());
+  Z3Term *zterm1 = dynamic_cast<Z3Term*>(t1.get());
+  Z3Term *zterm2 = dynamic_cast<Z3Term*>(t2.get());
   Z3_ast res;
 
   if (zterm0->is_function || zterm1->is_function || zterm2->is_function)
@@ -937,17 +937,17 @@ Term Z3Solver::make_term(Op op,
     else if (op == Forall || op == Exists)
     {
       z3::expr_vector zparams(ctx);
-      zparams.push_back(static_pointer_cast<Z3Term>(t0)->term);
-      zparams.push_back(static_pointer_cast<Z3Term>(t1)->term);
-      z3::expr zbody = static_pointer_cast<Z3Term>(t2)->term;
+      zparams.push_back(dynamic_cast<Z3Term*>(t0.get())->term);
+      zparams.push_back(dynamic_cast<Z3Term*>(t1.get())->term);
+      z3::expr zbody = dynamic_cast<Z3Term*>(t2.get())->term;
       if (op == Forall)
       {
-        return make_shared<Z3Term>(forall(zparams, zbody), ctx);
+        return make_shared_term(forall(zparams, zbody), ctx);
       }
       else
       {
         assert(op == Exists);
-        return make_shared<Z3Term>(exists(zparams, zbody), ctx);
+        return make_shared_term(exists(zparams, zbody), ctx);
       }
     }
     else
@@ -965,7 +965,7 @@ Term Z3Solver::make_term(Op op,
     throw IncorrectUsageException(msg);
   }
 
-  return std::make_shared<Z3Term>(to_expr(ctx, res), ctx);
+  return make_shared_term(to_expr(ctx, res), ctx);
 }
 
 Term Z3Solver::make_term(Op op, const TermVec & terms) const
@@ -989,12 +989,12 @@ Term Z3Solver::make_term(Op op, const TermVec & terms) const
   {
     vector<Z3_ast> zargs;
     zargs.reserve(size - 1);
-    shared_ptr<Z3Term> zterm;
+    Z3Term *zterm;
 
     // skip the first term (the function function)
     for (size_t i = 1; i < terms.size(); i++)
     {
-      zterm = static_pointer_cast<Z3Term>(terms[i]);
+      zterm = dynamic_cast<Z3Term*>(terms[i].get());
       if (zterm->is_function)
       {
         throw IncorrectUsageException("Cannot use a function as an argument.");
@@ -1002,7 +1002,7 @@ Term Z3Solver::make_term(Op op, const TermVec & terms) const
       zargs.push_back(zterm->term);
     }
 
-    zterm = static_pointer_cast<Z3Term>(terms[0]);
+    zterm = dynamic_cast<Z3Term*>(terms[0].get());
     if (!zterm->is_function)
     {
       string msg(
@@ -1012,16 +1012,16 @@ Term Z3Solver::make_term(Op op, const TermVec & terms) const
     }
 
     res = Z3_mk_app(ctx, zterm->z_func, size - 1, &zargs[0]);
-    return std::make_shared<Z3Term>(to_expr(ctx, res), ctx);
+    return make_shared_term(to_expr(ctx, res), ctx);
   }
 
   if (op.prim_op == Forall || op.prim_op == Exists)
   {
     z3::expr_vector zterms(ctx);
-    std::shared_ptr<Z3Term> zterm;
+    Z3Term *zterm;
     for (auto t : terms)
     {
-      zterm = std::static_pointer_cast<Z3Term>(t);
+      zterm = dynamic_cast<Z3Term*>(t.get());
       if (zterm->is_function)
       {
         throw IncorrectUsageException(
@@ -1043,7 +1043,7 @@ Term Z3Solver::make_term(Op op, const TermVec & terms) const
     {
       quant_res = exists(zterms, quantified_body);
     }
-    return std::make_shared<Z3Term>(quant_res, ctx);
+    return make_shared_term(quant_res, ctx);
   }
 
   if (size == 2)
@@ -1060,7 +1060,7 @@ Term Z3Solver::make_term(Op op, const TermVec & terms) const
     z3args.reserve(size);
     for (const auto & tt : terms)
     {
-      z3args.push_back(std::static_pointer_cast<Z3Term>(tt)->term);
+      z3args.push_back(dynamic_cast<Z3Term*>(tt.get())->term);
     }
 
     Z3_ast res;
@@ -1078,7 +1078,7 @@ Term Z3Solver::make_term(Op op, const TermVec & terms) const
         res = z3_fun(ctx, res, z3args[i]);
       }
     }
-    return std::make_shared<Z3Term>(to_expr(ctx, res), ctx);
+    return make_shared_term(to_expr(ctx, res), ctx);
   }
   else if (op == Distinct)
   {
@@ -1111,22 +1111,22 @@ Term Z3Solver::substitute(const Term term,
   z3::expr_vector z3destinations(ctx);
 
   // z3 counterpart of `term`
-  shared_ptr<Z3Term> z3term = static_pointer_cast<Z3Term>(term);
+  Z3Term *z3term = dynamic_cast<Z3Term*>(term.get());
   expr z3expr = to_expr(ctx, z3term->term);
   // populate the z3 expr_vectors according to the substitution map
   for (auto p : substitution_map)
   {
     Term from_term = p.first;
     Term to_term = p.second;
-    shared_ptr<Z3Term> z3_from_term = static_pointer_cast<Z3Term>(from_term);
-    shared_ptr<Z3Term> z3_to_term = static_pointer_cast<Z3Term>(to_term);
+    Z3Term *z3_from_term = dynamic_cast<Z3Term*>(from_term.get());
+    Z3Term *z3_to_term = dynamic_cast<Z3Term*>(to_term.get());
     z3sources.push_back(z3_from_term->term);
     z3destinations.push_back(z3_to_term->term);
   }
 
   // perform the substitution and return the result
   expr result = z3expr.substitute(z3sources, z3destinations);
-  return std::make_shared<Z3Term>(result, ctx);
+  return make_shared_term(result, ctx);
 }
 
 void Z3Solver::dump_smt2(std::string filename) const

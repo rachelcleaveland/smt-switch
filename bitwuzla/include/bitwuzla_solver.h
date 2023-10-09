@@ -164,10 +164,10 @@ class BzlaSolver : public AbsSmtSolver
   template <class I>
   inline Result check_sat_assuming_internal(I it, const I & end)
   {
-    std::shared_ptr<BzlaTerm> bt;
+    BzlaTerm *bt;
     while (it != end)
     {
-      bt = std::static_pointer_cast<BzlaTerm>(*it);
+      bt = dynamic_cast<BzlaTerm*>((*it).get());
       bitwuzla_assume(bzla, bt->term);
       ++it;
     }

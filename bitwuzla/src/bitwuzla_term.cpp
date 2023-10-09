@@ -100,6 +100,15 @@ const std::unordered_map<BitwuzlaKind, PrimOp> bkind2primop(
 const unordered_set<PrimOp> indexed_ops(
     { Extract, Zero_Extend, Sign_Extend, Repeat, Rotate_Left, Rotate_Right });
 
+/**
+ * Make a shared pointer from a bitwuzla term.
+ */
+Term make_shared_term(const BitwuzlaTerm * t) {
+  BzlaTerm *bterm = new BzlaTerm(t);
+  AbsTerm *abst = dynamic_cast<AbsTerm *>(bterm);
+  return RachelsSharedPtr<AbsTerm>(abst);
+}
+
 /*  start BzlaTermIter implementation */
 
 BzlaTermIter & BzlaTermIter::operator=(const BzlaTermIter & it)
@@ -117,7 +126,7 @@ void BzlaTermIter::operator++()
 const Term BzlaTermIter::operator*()
 {
   assert(idx < terms.size());
-  return make_shared<BzlaTerm>(terms.at(idx));
+  return make_shared_term(terms.at(idx));
 }
 
 TermIterBase * BzlaTermIter::clone() const
@@ -154,7 +163,7 @@ std::size_t BzlaTerm::get_id() const { return bitwuzla_term_hash(term); }
 
 bool BzlaTerm::compare(const Term & absterm) const
 {
-  shared_ptr<BzlaTerm> bterm = static_pointer_cast<BzlaTerm>(absterm);
+  BzlaTerm *bterm = dynamic_cast<BzlaTerm*>(absterm.get());
   // in bitwuzla, the pointers will be equivalent iff the terms are equivalent
   return term == bterm->term;
 }
