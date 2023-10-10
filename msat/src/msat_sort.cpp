@@ -24,6 +24,18 @@ namespace smt {
 
 // MsatSort implementation
 
+Sort make_shared_sort(msat_env e, msat_type t) {
+  MsatSort *zs = new MsatSort(e,t);
+  AbsSort *abss = dynamic_cast<AbsSort *>(zs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
+Sort make_shared_sort(msat_env e, msat_type t, msat_decl d) {
+  MsatSort *zs = new MsatSort(e,t,d);
+  AbsSort *abss = dynamic_cast<AbsSort *>(zs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
 std::size_t MsatSort::hash() const
 {
   // msat_type ptr is unique
@@ -50,7 +62,7 @@ Sort MsatSort::get_indexsort() const
   msat_type idx_type;
   if (msat_is_array_type(env, type, &idx_type, nullptr))
   {
-    return std::make_shared<MsatSort> (env, idx_type);
+    return make_shared_sort(env, idx_type);
   }
   else
   {
@@ -63,7 +75,7 @@ Sort MsatSort::get_elemsort() const
   msat_type elem_type;
   if (msat_is_array_type(env, type, nullptr, &elem_type))
   {
-    return std::make_shared<MsatSort> (env, elem_type);
+    return make_shared_sort(env, elem_type);
   }
   else
   {
@@ -90,7 +102,7 @@ SortVec MsatSort::get_domain_sorts() const
       throw InternalSolverException("Got error type");
     }
     // Note: assuming first-order, function can't take function arguments
-    sorts.push_back(std::make_shared<MsatSort> (env, tmp_type));
+    sorts.push_back(make_shared_sort(env, tmp_type));
   }
   return sorts;
 }
@@ -107,7 +119,7 @@ Sort MsatSort::get_codomain_sort() const
   {
     throw InternalSolverException("Got error type");
   }
-  return std::make_shared<MsatSort> (env, t);
+  return make_shared_sort(env, t);
 }
 
 string MsatSort::get_uninterpreted_name() const
@@ -135,7 +147,7 @@ Datatype MsatSort::get_datatype() const
 
 bool MsatSort::compare(const Sort & s) const
 {
-  std::shared_ptr<MsatSort> msort = std::static_pointer_cast<MsatSort>(s);
+  MsatSort *msort = dynamic_cast<MsatSort*>(s.get());
   return msat_type_equals(type, msort->type);
 }
 

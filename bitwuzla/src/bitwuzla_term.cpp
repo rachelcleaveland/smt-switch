@@ -210,7 +210,7 @@ Op BzlaTerm::get_op() const
 
 Sort BzlaTerm::get_sort() const
 {
-  return make_shared<BzlaSort>(bitwuzla_term_get_sort(term));
+  return make_shared_sort(bitwuzla_term_get_sort(term));
 }
 
 bool BzlaTerm::is_symbol() const

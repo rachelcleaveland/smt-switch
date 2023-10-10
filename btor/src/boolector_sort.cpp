@@ -22,6 +22,30 @@ namespace smt {
 
 /* BoolectorSolver implementation */
 
+Sort make_shared_sort(SortKind sk, Btor * b, BoolectorSort s) {
+  BoolectorSortBase *bsb = new BoolectorSortBase(sk,b,s);
+  AbsSort *abss = dynamic_cast<AbsSort *>(bsb);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
+Sort make_shared_sort(Btor * b, BoolectorSort s, uint64_t w) {
+  BoolectorBVSort *bsb = new BoolectorBVSort(b,s,w);
+  AbsSort *abss = dynamic_cast<AbsSort *>(bsb);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
+Sort make_shared_sort(Btor * b, BoolectorSort s, Sort is, Sort es) {
+  BoolectorArraySort *bsb = new BoolectorArraySort(b,s,is,es);
+  AbsSort *abss = dynamic_cast<AbsSort *>(bsb);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
+Sort make_shared_sort(Btor * b, BoolectorSort s, SortVec sorts, Sort sort) {
+  BoolectorUFSort *bufs = new BoolectorUFSort(b,s,sorts,sort);
+  AbsSort *abss = dynamic_cast<AbsSort *>(bufs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
 BoolectorSortBase::~BoolectorSortBase() { boolector_release_sort(btor, sort); }
 
 std::size_t BoolectorSortBase::hash() const
@@ -94,8 +118,8 @@ Datatype BoolectorSortBase::get_datatype() const
 
 bool BoolectorSortBase::compare(const Sort & s) const
 {
-  std::shared_ptr<BoolectorSortBase> bs =
-      std::static_pointer_cast<BoolectorSortBase>(s);
+  BoolectorSortBase *bs =
+      dynamic_cast<BoolectorSortBase*>(s.get());
   return (sort == bs->sort);
 }
 /* end BoolectorSolver implementation */

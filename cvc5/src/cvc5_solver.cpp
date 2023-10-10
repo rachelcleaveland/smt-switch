@@ -236,7 +236,7 @@ Term Cvc5Solver::make_term(std::string val,
 Term Cvc5Solver::make_term(const Term & val, const Sort & sort) const
 {
   Cvc5Term *cterm = dynamic_cast<Cvc5Term *>(val.get());
-  std::shared_ptr<Cvc5Sort> csort = std::static_pointer_cast<Cvc5Sort>(sort);
+  Cvc5Sort *csort = dynamic_cast<Cvc5Sort*>(sort.get());
   ::cvc5::Term const_arr = solver.mkConstArray(csort->sort, cterm->get_cvc5_term());
   return make_shared_term(const_arr);
 }
@@ -474,7 +474,7 @@ Sort Cvc5Solver::make_sort(const std::string name, uint64_t arity) const
 {
   try
   {
-    return std::make_shared<Cvc5Sort>(solver.declareSort(name, arity));
+    return make_shared_sort(solver.declareSort(name, arity));
   }
   catch (::cvc5::CVC5ApiException & e)
   {
@@ -488,15 +488,15 @@ Sort Cvc5Solver::make_sort(SortKind sk) const
   {
     if (sk == BOOL)
     {
-      return std::make_shared<Cvc5Sort>(solver.getBooleanSort());
+      return make_shared_sort(solver.getBooleanSort());
     }
     else if (sk == INT)
     {
-      return std::make_shared<Cvc5Sort>(solver.getIntegerSort());
+      return make_shared_sort(solver.getIntegerSort());
     }
     else if (sk == REAL)
     {
-      return std::make_shared<Cvc5Sort>(solver.getRealSort());
+      return make_shared_sort(solver.getRealSort());
     }
     else
     {
@@ -518,7 +518,7 @@ Sort Cvc5Solver::make_sort(SortKind sk, uint64_t size) const
   {
     if (sk == BV)
     {
-      return std::make_shared<Cvc5Sort>(solver.mkBitVectorSort(size));
+      return make_shared_sort(solver.mkBitVectorSort(size));
     }
     else
     {
@@ -548,11 +548,11 @@ Sort Cvc5Solver::make_sort(SortKind sk,
   {
     if (sk == ARRAY)
     {
-      std::shared_ptr<Cvc5Sort> cidxsort =
-          std::static_pointer_cast<Cvc5Sort>(sort1);
-      std::shared_ptr<Cvc5Sort> celemsort =
-          std::static_pointer_cast<Cvc5Sort>(sort2);
-      return std::make_shared<Cvc5Sort>(
+      Cvc5Sort *cidxsort =
+          dynamic_cast<Cvc5Sort*>(sort1.get());
+      Cvc5Sort *celemsort =
+          dynamic_cast<Cvc5Sort*>(sort2.get());
+      return make_shared_sort(
           solver.mkArraySort(cidxsort->sort, celemsort->sort));
     }
     else
@@ -599,13 +599,13 @@ Sort Cvc5Solver::make_sort(SortKind sk, const SortVec & sorts) const
       ::cvc5::Sort csort;
       for (uint32_t i = 0; i < arity; i++)
       {
-        csort = std::static_pointer_cast<Cvc5Sort>(sorts[i])->sort;
+        csort = dynamic_cast<Cvc5Sort*>(sorts[i].get())->sort;
         csorts.push_back(csort);
       }
 
-      csort = std::static_pointer_cast<Cvc5Sort>(sorts.back())->sort;
+      csort = dynamic_cast<Cvc5Sort*>(sorts.back().get())->sort;
       ::cvc5::Sort cfunsort = solver.mkFunctionSort(csorts, csort);
-      return std::make_shared<Cvc5Sort>(cfunsort);
+      return make_shared_sort(cfunsort);
     }
     else if (sorts.size() == 1)
     {
@@ -635,7 +635,7 @@ Sort Cvc5Solver::make_sort(SortKind sk, const SortVec & sorts) const
 
 Sort Cvc5Solver::make_sort(const Sort & sort_con, const SortVec & sorts) const
 {
-  ::cvc5::Sort csort_con = std::static_pointer_cast<Cvc5Sort>(sort_con)->sort;
+  ::cvc5::Sort csort_con = dynamic_cast<Cvc5Sort*>(sort_con.get())->sort;
 
   size_t numsorts = sorts.size();
   size_t arity = csort_con.getUninterpretedSortConstructorArity();
@@ -651,13 +651,13 @@ Sort Cvc5Solver::make_sort(const Sort & sort_con, const SortVec & sorts) const
   ::cvc5::Sort csort;
   for (uint32_t i = 0; i < arity; i++)
   {
-    csort = std::static_pointer_cast<Cvc5Sort>(sorts[i])->sort;
+    csort = dynamic_cast<Cvc5Sort*>(sorts[i].get())->sort;
     csorts.push_back(csort);
   }
 
   try
   {
-    return std::make_shared<Cvc5Sort>(csort_con.instantiate(csorts));
+    return make_shared_sort(csort_con.instantiate(csorts));
   }
   catch (::cvc5::CVC5ApiException & e)
   {
@@ -677,7 +677,7 @@ Term Cvc5Solver::make_symbol(const std::string name, const Sort & sort)
 
   try
   {
-    std::shared_ptr<Cvc5Sort> csort = std::static_pointer_cast<Cvc5Sort>(sort);
+    Cvc5Sort *csort = dynamic_cast<Cvc5Sort*>(sort.get());
     ::cvc5::Term t = solver.mkConst(csort->sort, name);
     Term res = make_shared_term(t); 
     symbol_table[name] = res;
@@ -703,7 +703,7 @@ Term Cvc5Solver::make_param(const std::string name, const Sort & sort)
 {
   try
   {
-    std::shared_ptr<Cvc5Sort> csort = std::static_pointer_cast<Cvc5Sort>(sort);
+    Cvc5Sort *csort = dynamic_cast<Cvc5Sort*>(sort.get());
     ::cvc5::Term t = solver.mkVar(csort->sort, name);
     return make_shared_term(t); 
   }
@@ -725,7 +725,7 @@ Sort Cvc5Solver::make_sort(const DatatypeDecl & d) const
     std::shared_ptr<Cvc5DatatypeDecl> cd =
         std::static_pointer_cast<Cvc5DatatypeDecl>(d);
 
-    return std::make_shared<Cvc5Sort>(solver.mkDatatypeSort(cd->datatypedecl));
+    return make_shared_sort(solver.mkDatatypeSort(cd->datatypedecl));
   }
   catch (::cvc5::CVC5ApiException & e)
   {
@@ -784,7 +784,7 @@ void Cvc5Solver::add_selector(DatatypeConstructorDecl & dt,
   {
     std::shared_ptr<Cvc5DatatypeConstructorDecl> cdt =
         std::static_pointer_cast<Cvc5DatatypeConstructorDecl>(dt);
-    std::shared_ptr<Cvc5Sort> cs = std::static_pointer_cast<Cvc5Sort>(s);
+    Cvc5Sort *cs = dynamic_cast<Cvc5Sort*>(s.get());
     cdt->datatypeconstructordecl.addSelector(name, cs->sort);
   }
   catch (::cvc5::CVC5ApiException & e)
@@ -812,7 +812,7 @@ Term Cvc5Solver::get_constructor(const Sort & s, std::string name) const
 {
   try
   {
-    std::shared_ptr<Cvc5Sort> cs = std::static_pointer_cast<Cvc5Sort>(s);
+    Cvc5Sort *cs = dynamic_cast<Cvc5Sort*>(s.get());
     cvc5::Datatype dt = cs->sort.getDatatype();
     return make_shared_term(dt.getConstructor(name).getTerm());
   }
@@ -826,7 +826,7 @@ Term Cvc5Solver::get_tester(const Sort & s, std::string name) const
 {
   try
   {
-    std::shared_ptr<Cvc5Sort> cs = std::static_pointer_cast<Cvc5Sort>(s);
+    Cvc5Sort *cs = dynamic_cast<Cvc5Sort*>(s.get());
     cvc5::Datatype dt = cs->sort.getDatatype();
     for (int i = 0; i != dt.getNumConstructors(); i++)
     {
@@ -851,7 +851,7 @@ Term Cvc5Solver::get_selector(const Sort & s,
 {
   try
   {
-    std::shared_ptr<Cvc5Sort> cs = std::static_pointer_cast<Cvc5Sort>(s);
+    Cvc5Sort *cs = dynamic_cast<Cvc5Sort*>(s.get());
     cvc5::Datatype dt = cs->sort.getDatatype();
     return make_shared_term(dt.getSelector(name).getTerm());
   }
@@ -879,7 +879,7 @@ SortVec Cvc5Solver::make_datatype_sorts(
 
     for (const auto & csort : solver.mkDatatypeSorts(cvc5_decls))
     {
-      dt_sorts.push_back(std::make_shared<Cvc5Sort>(csort));
+      dt_sorts.push_back(make_shared_sort(csort));
     }
     return dt_sorts;
   }

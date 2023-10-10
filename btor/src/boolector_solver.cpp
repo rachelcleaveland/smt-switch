@@ -219,8 +219,8 @@ Term BoolectorSolver::make_term(int64_t i, const Sort & sort) const
 {
   try
   {
-    std::shared_ptr<BoolectorSortBase> bs =
-        std::static_pointer_cast<BoolectorSortBase>(sort);
+    BoolectorSortBase *bs =
+        dynamic_cast<BoolectorSortBase*>(sort.get());
     // note: give the constant value a null PrimOp
     return make_shared_term(btor, boolector_int(btor, i, bs->sort));
   }
@@ -237,8 +237,8 @@ Term BoolectorSolver::make_term(std::string val,
 {
   try
   {
-    std::shared_ptr<BoolectorSortBase> bs =
-        std::static_pointer_cast<BoolectorSortBase>(sort);
+    BoolectorSortBase *bs =
+        dynamic_cast<BoolectorSortBase*>(sort.get());
 
     BoolectorNode * node;
     if (base == 10)
@@ -275,8 +275,8 @@ Term BoolectorSolver::make_term(const Term & val, const Sort & sort) const
   {
     BoolectorTerm *bt =
         dynamic_cast<BoolectorTerm*>(val.get());
-    std::shared_ptr<BoolectorSortBase> bs =
-        std::static_pointer_cast<BoolectorSortBase>(sort);
+    BoolectorSortBase *bs =
+        dynamic_cast<BoolectorSortBase*>(sort.get());
     return make_shared_term
         (btor, boolector_const_array(btor, bs->sort, bt->node));
   }
@@ -359,11 +359,11 @@ Term BoolectorSolver::get_value(const Term & t) const
   }
   else if (sk == ARRAY)
   {
-    std::shared_ptr<BoolectorSortBase> bs =
-        std::static_pointer_cast<BoolectorSortBase>(sort);
+    BoolectorSortBase *bs =
+        dynamic_cast<BoolectorSortBase*>(sort.get());
 
-    std::shared_ptr<BoolectorSortBase> b_elemsort =
-        std::static_pointer_cast<BoolectorSortBase>(sort->get_elemsort());
+    BoolectorSortBase *b_elemsort =
+        dynamic_cast<BoolectorSortBase*>((sort->get_elemsort()).get());
 
     BoolectorNode * zero = boolector_zero(btor, b_elemsort->sort);
     BoolectorNode * stores = boolector_const_array(btor, bs->sort, zero);
@@ -503,7 +503,7 @@ Sort BoolectorSolver::make_sort(SortKind sk) const
 {
   if (sk == BOOL)
   {
-    return std::make_shared<BoolectorBVSort>
+    return make_shared_sort
         (btor, boolector_bool_sort(btor), 1);
   }
   else
@@ -518,7 +518,7 @@ Sort BoolectorSolver::make_sort(SortKind sk, uint64_t size) const
 {
   if (sk == BV)
   {
-    return std::make_shared<BoolectorBVSort>
+    return make_shared_sort
         (btor, boolector_bitvec_sort(btor, size), size);
   }
   else
@@ -542,13 +542,13 @@ Sort BoolectorSolver::make_sort(SortKind sk,
 {
   if (sk == ARRAY)
   {
-    std::shared_ptr<BoolectorSortBase> btor_idxsort =
-        std::static_pointer_cast<BoolectorSortBase>(sort1);
-    std::shared_ptr<BoolectorSortBase> btor_elemsort =
-        std::static_pointer_cast<BoolectorSortBase>(sort2);
+    BoolectorSortBase *btor_idxsort =
+        dynamic_cast<BoolectorSortBase*>(sort1.get());
+    BoolectorSortBase *btor_elemsort =
+        dynamic_cast<BoolectorSortBase*>(sort2.get());
     BoolectorSort bs =
         boolector_array_sort(btor, btor_idxsort->sort, btor_elemsort->sort);
-    return std::make_shared<BoolectorArraySort> (btor, bs, sort1, sort2);
+    return make_shared_sort(btor, bs, sort1, sort2);
   }
   else
   {
@@ -580,8 +580,8 @@ Sort BoolectorSolver::make_sort(SortKind sk, const SortVec & sorts) const
     }
 
     Sort returnsort = sorts.back();
-    std::shared_ptr<BoolectorSortBase> btor_return_sort =
-        std::static_pointer_cast<BoolectorSortBase>(returnsort);
+    BoolectorSortBase *btor_return_sort =
+        dynamic_cast<BoolectorSortBase*>(returnsort.get());
 
     // arity is one less, because last sort is return sort
     uint32_t arity = sorts.size() - 1;
@@ -589,14 +589,14 @@ Sort BoolectorSolver::make_sort(SortKind sk, const SortVec & sorts) const
     btor_sorts.reserve(arity);
     for (size_t i = 0; i < arity; i++)
     {
-      std::shared_ptr<BoolectorSortBase> bs =
-          std::static_pointer_cast<BoolectorSortBase>(sorts[i]);
+      BoolectorSortBase *bs =
+          dynamic_cast<BoolectorSortBase*>(sorts[i].get());
       btor_sorts.push_back(bs->sort);
     }
 
     BoolectorSort btor_fun_sort = boolector_fun_sort(
         btor, btor_sorts.data(), arity, btor_return_sort->sort);
-    return std::make_shared<BoolectorUFSort>
+    return make_shared_sort
         (btor, btor_fun_sort, sorts, returnsort);
   }
   else if (sorts.size() == 1)
@@ -637,8 +637,8 @@ Term BoolectorSolver::make_symbol(const std::string name, const Sort & sort)
     throw IncorrectUsageException("symbol " + name + " has already been used.");
   }
 
-  std::shared_ptr<BoolectorSortBase> bs =
-      std::static_pointer_cast<BoolectorSortBase>(sort);
+  BoolectorSortBase *bs =
+      dynamic_cast<BoolectorSortBase*>(sort.get());
 
   SortKind sk = sort->get_sort_kind();
   BoolectorNode * n;
@@ -673,8 +673,8 @@ Term BoolectorSolver::get_symbol(const std::string & name)
 
 Term BoolectorSolver::make_param(const std::string name, const Sort & sort)
 {
-  std::shared_ptr<BoolectorSortBase> bs =
-      std::static_pointer_cast<BoolectorSortBase>(sort);
+  BoolectorSortBase *bs =
+      dynamic_cast<BoolectorSortBase*>(sort.get());
   BoolectorNode * n = boolector_param(btor, bs->sort, name.c_str());
   return make_shared_term(btor, n);
 }

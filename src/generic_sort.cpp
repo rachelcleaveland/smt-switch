@@ -25,14 +25,62 @@ using namespace std;
 
 namespace smt {
 
+/**
+ * Functions to construct shared pointers of generic sorts.
+ */
+Sort make_shared_sort(const std::string & name) {
+  GenericSort *gs = new GenericSort(name);
+  return RachelsSharedPtr<AbsSort>(gs);
+}
+
+Sort make_shared_sort(SortKind sk) {
+  GenericSort *gs = new GenericSort(sk);
+  return RachelsSharedPtr<AbsSort>(gs);
+}
+
+Sort make_shared_sort(std::string name, uint64_t arity) {
+  UninterpretedGenericSort *ugs = new UninterpretedGenericSort(name,arity);
+  return RachelsSharedPtr<AbsSort>(ugs);
+}
+
+Sort make_shared_sort(Sort sort_cons, const SortVec & sorts) {
+  UninterpretedGenericSort *ugs = new UninterpretedGenericSort(sort_cons,sorts);
+  return RachelsSharedPtr<AbsSort>(ugs);
+}
+
+Sort make_shared_sort(uint64_t width) {
+  BVGenericSort *bvgs = new BVGenericSort(width);
+  return RachelsSharedPtr<AbsSort>(bvgs);
+}
+
+Sort make_shared_sort(Sort s1, Sort s2) {
+  ArrayGenericSort *ags = new ArrayGenericSort(s1,s2);
+  return RachelsSharedPtr<AbsSort>(ags);
+}
+
+Sort make_shared_sort(SortVec s1, Sort s2) {
+  FunctionGenericSort *fgs = new FunctionGenericSort(s1,s2);
+  return RachelsSharedPtr<AbsSort>(fgs);
+}
+
+Sort make_shared_sort(Datatype dt) {
+  GenericDatatypeSort *gts = new GenericDatatypeSort(dt);
+  return RachelsSharedPtr<AbsSort>(gts);
+}
+
+Sort make_shared_sort(SortKind sk, std::string cons_name, Sort dt) {
+  DatatypeComponentSort *dcs = new DatatypeComponentSort(sk,cons_name,dt);
+  return RachelsSharedPtr<AbsSort>(dcs);
+}
+
 Sort make_uninterpreted_generic_sort(string name, uint64_t arity)
 {
-  return make_shared<UninterpretedGenericSort>(name, arity);
+  return make_shared_sort(name, arity);
 }
 
 Sort make_uninterpreted_generic_sort(Sort sort_cons,
                                      const SortVec & sorts) {
-  return make_shared<UninterpretedGenericSort>(sort_cons, sorts);
+  return make_shared_sort(sort_cons, sorts);
 }
 
 
@@ -42,7 +90,7 @@ Sort make_generic_sort(SortKind sk)
   {
     throw IncorrectUsageException("Can't create sort from " + to_string(sk));
   }
-  return make_shared<GenericSort>(sk);
+  return make_shared_sort(sk);
 }
 
 Sort make_generic_sort(SortKind sk, uint64_t width)
@@ -52,7 +100,7 @@ Sort make_generic_sort(SortKind sk, uint64_t width)
     throw IncorrectUsageException("Can't create sort from " + to_string(sk)
                                   + " and " + ::std::to_string(width));
   }
-  return make_shared<BVGenericSort>(width);
+  return make_shared_sort(width);
 }
 
 Sort make_generic_sort(SortKind sk, Sort sort1)
@@ -66,12 +114,12 @@ Sort make_generic_sort(SortKind sk, Sort sort1, Sort sort2)
   Sort genericsort;
   if (sk == ARRAY)
   {
-    genericsort = make_shared<ArrayGenericSort>(sort1, sort2);
+    genericsort = make_shared_sort(sort1, sort2);
   }
   else if (sk == FUNCTION)
   {
     genericsort =
-        make_shared<FunctionGenericSort>(SortVec{ sort1 }, sort2);
+        make_shared_sort(SortVec{ sort1 }, sort2);
   }
   else
   {
@@ -86,7 +134,7 @@ Sort make_generic_sort(SortKind sk, Sort sort1, Sort sort2, Sort sort3)
 {
   if (sk == FUNCTION)
   {
-    return make_shared<FunctionGenericSort>(
+    return make_shared_sort(
         SortVec{ sort1, sort2 }, sort3);
   }
   else
@@ -103,11 +151,11 @@ Sort make_generic_sort(SortKind sk, SortVec sorts)
   {
     Sort return_sort = sorts.back();
     sorts.pop_back();
-    return make_shared<FunctionGenericSort>(sorts, return_sort);
+    return make_shared_sort(sorts, return_sort);
   }
   else if (sk == ARRAY && sorts.size() == 2)
   {
-    return make_shared<ArrayGenericSort>(sorts[0], sorts[1]);
+    return make_shared_sort(sorts[0], sorts[1]);
   }
   else
   {
@@ -123,11 +171,11 @@ Sort make_generic_sort(SortKind sk, SortVec sorts)
 
 Sort make_generic_sort(Datatype dt)
 {
-  return make_shared<GenericDatatypeSort>(dt);
+  return make_shared_sort(dt);
 }
 Sort make_generic_sort(SortKind sk, std::string cons_name, Sort dt)
 {
-  return make_shared<DatatypeComponentSort>(sk, cons_name, dt);
+  return make_shared_sort(sk, cons_name, dt);
 }
 
 // implementations
@@ -256,8 +304,8 @@ bool GenericSort::compare(const Sort & s) const
     case DATATYPE:
     {
       assert(sk == DATATYPE);
-      shared_ptr<GenericDatatypeSort> other_type_cast =
-          static_pointer_cast<GenericDatatypeSort>(s);
+      GenericDatatypeSort *other_type_cast =
+          dynamic_cast<GenericDatatypeSort*>(s.get());
       return static_pointer_cast<GenericDatatype>(get_datatype())->get_name()
              == other_type_cast->compute_string();
     }
@@ -372,8 +420,8 @@ bool GenericDatatypeSort::compare(const Sort & s) const
 {
   // Compares the strings of two datatype sorts
   assert(s->get_sort_kind() == DATATYPE);
-  shared_ptr<GenericDatatypeSort> other_sort =
-      static_pointer_cast<GenericDatatypeSort>(s);
+  GenericDatatypeSort *other_sort =
+      dynamic_cast<GenericDatatypeSort*>(s.get());
   return compute_string() == other_sort->to_string();
 }
 
@@ -409,8 +457,8 @@ SortVec DatatypeComponentSort::get_domain_sorts() const
   std::vector<Sort> domain_sorts;
   if (sk == CONSTRUCTOR)
   {
-    shared_ptr<GenericDatatypeSort> cast_dt_sort =
-        static_pointer_cast<GenericDatatypeSort>(dt_sort);
+    GenericDatatypeSort *cast_dt_sort =
+        dynamic_cast<GenericDatatypeSort*>(dt_sort.get());
     shared_ptr<GenericDatatype> gdt =
         static_pointer_cast<GenericDatatype>(cast_dt_sort->get_datatype());
     for (int i = 0; i < gdt->get_num_constructors(); ++i)
@@ -451,7 +499,7 @@ Sort DatatypeComponentSort::get_codomain_sort() const
 
   assert(sk == CONSTRUCTOR || sk == TESTER || sk == SELECTOR);
 
-  return nullptr;
+  return RachelsSharedPtr<AbsSort>();
 }
 
 void DatatypeComponentSort::set_selector_sort(Sort new_selector_sort)

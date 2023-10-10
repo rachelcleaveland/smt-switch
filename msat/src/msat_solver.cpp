@@ -405,7 +405,7 @@ Sort MsatSolver::make_sort(const std::string name, uint64_t arity) const
   initialize_env();
   if (!arity)
   {
-    return std::make_shared<MsatSort> (env,
+    return make_shared_sort(env,
                                        msat_get_simple_type(env, name.c_str()));
   }
   else
@@ -421,15 +421,15 @@ Sort MsatSolver::make_sort(SortKind sk) const
   initialize_env();
   if (sk == BOOL)
   {
-    return std::make_shared<MsatSort> (env, msat_get_bool_type(env));
+    return make_shared_sort(env, msat_get_bool_type(env));
   }
   else if (sk == INT)
   {
-    return std::make_shared<MsatSort> (env, msat_get_integer_type(env));
+    return make_shared_sort(env, msat_get_integer_type(env));
   }
   else if (sk == REAL)
   {
-    return std::make_shared<MsatSort> (env, msat_get_rational_type(env));
+    return make_shared_sort(env, msat_get_rational_type(env));
   }
   else
   {
@@ -445,7 +445,7 @@ Sort MsatSolver::make_sort(SortKind sk, uint64_t size) const
   initialize_env();
   if (sk == BV)
   {
-    return std::make_shared<MsatSort> (env, msat_get_bv_type(env, size));
+    return make_shared_sort(env, msat_get_bv_type(env, size));
   }
   else
   {
@@ -470,11 +470,11 @@ Sort MsatSolver::make_sort(SortKind sk,
   initialize_env();
   if (sk == ARRAY)
   {
-    std::shared_ptr<MsatSort> midxsort =
-        std::static_pointer_cast<MsatSort>(sort1);
-    std::shared_ptr<MsatSort> melemsort =
-        std::static_pointer_cast<MsatSort>(sort2);
-    return std::make_shared<MsatSort>
+    MsatSort *midxsort =
+        dynamic_cast<MsatSort*>(sort1.get());
+    MsatSort *melemsort =
+        dynamic_cast<MsatSort*>(sort2.get());
+    return make_shared_sort
         (env, msat_get_array_type(env, midxsort->type, melemsort->type));
   }
   else
@@ -517,7 +517,7 @@ Sort MsatSolver::make_sort(SortKind sk, const SortVec & sorts) const
     msat_type msort;
     for (uint32_t i = 0; i < arity; i++)
     {
-      msort = std::static_pointer_cast<MsatSort>(sorts[i])->type;
+      msort = dynamic_cast<MsatSort*>(sorts[i].get())->type;
       if (msat_is_bool_type(env, msort))
       {
         // mathsat does not support functions of booleans
@@ -528,7 +528,7 @@ Sort MsatSolver::make_sort(SortKind sk, const SortVec & sorts) const
       decl_name += ("_" + sorts[i]->to_string());
     }
     Sort sort = sorts.back();
-    msort = std::static_pointer_cast<MsatSort>(sort)->type;
+    msort = dynamic_cast<MsatSort*>(sort.get())->type;
     decl_name += ("_return_" + sort->to_string());
     msat_type mfunsort = msat_get_function_type(env, &msorts[0], arity, msort);
 
@@ -537,7 +537,7 @@ Sort MsatSolver::make_sort(SortKind sk, const SortVec & sorts) const
     msat_decl ref_fun_decl =
         msat_declare_function(env, decl_name.c_str(), mfunsort);
 
-    return std::make_shared<MsatSort> (env, mfunsort, ref_fun_decl);
+    return make_shared_sort(env, mfunsort, ref_fun_decl);
   }
   else if (sorts.size() == 1)
   {
@@ -713,7 +713,7 @@ Term MsatSolver::make_term(const Term & val, const Sort & sort) const
     throw IncorrectUsageException(
         "Expecting to create a const array but got a non array sort");
   }
-  shared_ptr<MsatSort> msort = static_pointer_cast<MsatSort>(sort);
+  MsatSort *msort = dynamic_cast<MsatSort*>(sort.get());
   MsatTerm *mval = dynamic_cast<MsatTerm*>(val.get());
   return make_shared_term
       (env, msat_make_array_const(env, msort->type, mval->term));
@@ -732,7 +732,7 @@ Term MsatSolver::make_symbol(const string name, const Sort & sort)
     throw IncorrectUsageException(msg);
   }
 
-  shared_ptr<MsatSort> msort = static_pointer_cast<MsatSort>(sort);
+  MsatSort *msort = dynamic_cast<MsatSort*>(sort.get());
   if (MSAT_ERROR_TYPE(msort->type))
   {
     throw InternalSolverException("Got error type in MathSAT backend.");
@@ -789,7 +789,7 @@ Term MsatSolver::get_symbol(const std::string & name)
 Term MsatSolver::make_param(const std::string name, const Sort & sort)
 {
   initialize_env();
-  shared_ptr<MsatSort> msort = static_pointer_cast<MsatSort>(sort);
+  MsatSort *msort = dynamic_cast<MsatSort*>(sort.get());
   msat_term var = msat_make_variable(env, name.c_str(), msort->type);
   return make_shared_term(env, var);
 }

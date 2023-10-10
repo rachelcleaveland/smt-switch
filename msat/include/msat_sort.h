@@ -56,5 +56,8 @@ class MsatSort : public AbsSort
   friend class MsatSolver;
 };
 
+Sort make_shared_sort(msat_env e, msat_type t);
+Sort make_shared_sort(msat_env e, msat_type t, msat_decl d);
+
 }  // namespace smt
 

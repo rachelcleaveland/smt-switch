@@ -20,11 +20,45 @@ using namespace std;
 
 namespace smt {
 
+/**
+ * Make shared pointers of logging sorts.
+ */ 
+Sort make_shared_sort(Sort s, std::string name, uint64_t arity) {
+  UninterpretedLoggingSort *uls = new UninterpretedLoggingSort(s,name,arity);
+  return RachelsSharedPtr<AbsSort>(uls);
+}
+
+Sort make_shared_sort(Sort s, std::string name, uint64_t z, const SortVec & sorts) {
+  UninterpretedLoggingSort *uls = new UninterpretedLoggingSort(s,name,z,sorts);
+  return RachelsSharedPtr<AbsSort>(uls);
+}
+
+Sort make_shared_sort(SortKind sk, Sort s) {
+  LoggingSort *uls = new LoggingSort(sk,s);
+  return RachelsSharedPtr<AbsSort>(uls);
+}
+
+Sort make_shared_sort(Sort s, uint64_t width) {
+  BVLoggingSort *uls = new BVLoggingSort(s,width);
+  return RachelsSharedPtr<AbsSort>(uls);
+}
+
+Sort make_shared_sort(Sort s, Sort sort1, Sort sort2) {
+  ArrayLoggingSort *uls = new ArrayLoggingSort(s,sort1,sort2);
+  return RachelsSharedPtr<AbsSort>(uls);
+}
+
+Sort make_shared_sort(Sort s, SortVec sv, Sort sort2) {
+  FunctionLoggingSort *uls = new FunctionLoggingSort(s,sv,sort2);
+  return RachelsSharedPtr<AbsSort>(uls);
+}
+
+
 /* Helper functions */
 
 Sort make_uninterpreted_logging_sort(Sort s, string name, uint64_t arity)
 {
-  return std::make_shared<UninterpretedLoggingSort>(s, name, arity);
+  return make_shared_sort(s, name, arity);
 }
 
 Sort make_uninterpreted_logging_sort(Sort s,
@@ -32,7 +66,7 @@ Sort make_uninterpreted_logging_sort(Sort s,
                                      const SortVec & sorts)
 {
   // sort has zero arity after being constructed
-  return std::make_shared<UninterpretedLoggingSort>(s, name, 0, sorts);
+  return make_shared_sort(s, name, 0, sorts);
 }
 
 Sort make_logging_sort(SortKind sk, Sort s)
@@ -41,7 +75,7 @@ Sort make_logging_sort(SortKind sk, Sort s)
   {
     throw IncorrectUsageException("Can't create sort from " + to_string(sk));
   }
-  return std::make_shared<LoggingSort>(sk, s);
+  return make_shared_sort(sk, s);
 }
 
 Sort make_logging_sort(SortKind sk, Sort s, uint64_t width)
@@ -51,7 +85,7 @@ Sort make_logging_sort(SortKind sk, Sort s, uint64_t width)
     throw IncorrectUsageException("Can't create sort from " + to_string(sk)
                                   + " and " + ::std::to_string(width));
   }
-  return std::make_shared<BVLoggingSort>(s, width);
+  return make_shared_sort(s, width);
 }
 
 Sort make_logging_sort(SortKind sk, Sort s, Sort sort1)
@@ -65,12 +99,11 @@ Sort make_logging_sort(SortKind sk, Sort s, Sort sort1, Sort sort2)
   Sort loggingsort;
   if (sk == ARRAY)
   {
-    loggingsort = std::make_shared<ArrayLoggingSort>(s, sort1, sort2);
+    loggingsort = make_shared_sort(s, sort1, sort2);
   }
   else if (sk == FUNCTION)
   {
-    loggingsort =
-        std::make_shared<FunctionLoggingSort>(s, SortVec{ sort1 }, sort2);
+    loggingsort = make_shared_sort(s, SortVec{ sort1 }, sort2);
   }
   else
   {
@@ -85,8 +118,7 @@ Sort make_logging_sort(SortKind sk, Sort s, Sort sort1, Sort sort2, Sort sort3)
 {
   if (sk == FUNCTION)
   {
-    return std::make_shared<FunctionLoggingSort>(
-        s, SortVec{ sort1, sort2 }, sort3);
+    return make_shared_sort(s, SortVec{ sort1, sort2 }, sort3);
   }
   else
   {
@@ -102,11 +134,11 @@ Sort make_logging_sort(SortKind sk, Sort s, SortVec sorts)
   {
     Sort return_sort = sorts.back();
     sorts.pop_back();
-    return std::make_shared<FunctionLoggingSort>(s, sorts, return_sort);
+    return make_shared_sort(s, sorts, return_sort);
   }
   else if (sk == ARRAY && sorts.size() == 2)
   {
-    return std::make_shared<ArrayLoggingSort>(s, sorts[0], sorts[1]);
+    return make_shared_sort(s, sorts[0], sorts[1]);
   }
   else
   {

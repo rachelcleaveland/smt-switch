@@ -501,7 +501,7 @@ Sort Yices2Solver::make_sort(const std::string name, uint64_t arity) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Sort> (y_sort);
+  return make_shared_sort(y_sort);
 }
 
 Sort Yices2Solver::make_sort(SortKind sk) const
@@ -534,7 +534,7 @@ Sort Yices2Solver::make_sort(SortKind sk) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Sort> (y_sort);
+  return make_shared_sort(y_sort);
 }
 
 Sort Yices2Solver::make_sort(SortKind sk, uint64_t size) const
@@ -559,7 +559,7 @@ Sort Yices2Solver::make_sort(SortKind sk, uint64_t size) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Sort>(y_sort);
+  return make_shared_sort(y_sort);
 }
 
 Sort Yices2Solver::make_sort(SortKind sk, const Sort & sort1) const
@@ -572,18 +572,18 @@ Sort Yices2Solver::make_sort(SortKind sk,
                              const Sort & sort1,
                              const Sort & sort2) const
 {
-  std::shared_ptr<Yices2Sort> s1 = std::static_pointer_cast<Yices2Sort>(sort1);
-  std::shared_ptr<Yices2Sort> s2 = std::static_pointer_cast<Yices2Sort>(sort2);
+  Yices2Sort *s1 = dynamic_cast<Yices2Sort*>(sort1.get());
+  Yices2Sort *s2 = dynamic_cast<Yices2Sort*>(sort2.get());
   Sort ret_sort;
 
   if (sk == ARRAY)
   {
-    ret_sort = std::make_shared<Yices2Sort>
+    ret_sort = make_shared_sort
         (yices_function_type1(s1->type, s2->type));
   }
   else if (sk == FUNCTION)
   {
-    ret_sort = std::make_shared<Yices2Sort>
+    ret_sort = make_shared_sort
         (yices_function_type1(s1->type, s2->type), true);
   }
   else
@@ -635,12 +635,12 @@ Sort Yices2Solver::make_sort(SortKind sk, const SortVec & sorts) const
     type_t ys;
     for (uint32_t i = 0; i < arity; i++)
     {
-      ys = std::static_pointer_cast<Yices2Sort>(sorts[i])->type;
+      ys = dynamic_cast<Yices2Sort*>(sorts[i].get())->type;
       ysorts.push_back(ys);
     }
 
     Sort sort = sorts.back();
-    ys = std::static_pointer_cast<Yices2Sort>(sort)->type;
+    ys = dynamic_cast<Yices2Sort*>(sort.get())->type;
 
     y_sort = yices_function_type(arity, &ysorts[0], ys);
   }
@@ -670,7 +670,7 @@ Sort Yices2Solver::make_sort(SortKind sk, const SortVec & sorts) const
     throw InternalSolverException(msg.c_str());
   }
 
-  return std::make_shared<Yices2Sort> (y_sort, true);
+  return make_shared_sort(y_sort, true);
 }
 
 Sort Yices2Solver::make_sort(const Sort & sort_con, const SortVec & sorts) const
@@ -686,7 +686,7 @@ Term Yices2Solver::make_symbol(const std::string name, const Sort & sort)
     throw IncorrectUsageException("symbol " + name + " has already been used.");
   }
 
-  shared_ptr<Yices2Sort> ysort = static_pointer_cast<Yices2Sort>(sort);
+  Yices2Sort *ysort = dynamic_cast<Yices2Sort*>(sort.get());
   term_t y_term = yices_new_uninterpreted_term(ysort->type);
   yices_set_term_name(y_term, name.c_str());
 

@@ -10,6 +10,18 @@ namespace smt {
 
 // Z3Sort implementation
 
+Sort make_shared_sort(z3::sort s, z3::context & c) {
+  Z3Sort *zs = new Z3Sort(s,c);
+  AbsSort *abss = dynamic_cast<AbsSort *>(zs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
+Sort make_shared_sort(z3::func_decl s, z3::context & c) {
+  Z3Sort *zs = new Z3Sort(s,c);
+  AbsSort *abss = dynamic_cast<AbsSort *>(zs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
 std::size_t Z3Sort::hash() const
 {
   if (is_function)
@@ -35,7 +47,7 @@ Sort Z3Sort::get_indexsort() const
 {
   if (type.is_array())
   {
-    return std::make_shared<Z3Sort>(type.array_domain(), *ctx);
+    return make_shared_sort(type.array_domain(), *ctx);
   }
   else
   {
@@ -47,7 +59,7 @@ Sort Z3Sort::get_elemsort() const
 {
   if (type.is_array())
   {
-    return std::make_shared<Z3Sort>(type.array_range(), *ctx);
+    return make_shared_sort(type.array_range(), *ctx);
   }
   else
   {
@@ -83,7 +95,7 @@ Sort Z3Sort::get_codomain_sort() const
 {
   if (is_function)
   {
-    return std::make_shared<Z3Sort>(z_func.range(), *ctx);
+    return make_shared_sort(z_func.range(), *ctx);
   }
   else
   {
@@ -131,7 +143,7 @@ Datatype Z3Sort::get_datatype() const
 
 bool Z3Sort::compare(const Sort & s) const
 {
-  std::shared_ptr<Z3Sort> zs = std::static_pointer_cast<Z3Sort>(s);
+  Z3Sort *zs = dynamic_cast<Z3Sort*>(s.get());
   return hash() == zs->hash();
   //	if (zs->is_function) {
   //		cout << "FUNCTOIN" << endl;

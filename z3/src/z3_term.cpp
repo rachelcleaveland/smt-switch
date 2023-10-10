@@ -268,7 +268,7 @@ Sort Z3Term::get_sort() const
 {
   if (!is_function)
   {
-    return std::make_shared<Z3Sort>(term.get_sort(), *ctx);
+    return make_shared_sort(term.get_sort(), *ctx);
   }
 
   z3::sort_vector domain(*ctx);
@@ -279,7 +279,7 @@ Sort Z3Term::get_sort() const
 
   z3::func_decl func = ctx->function(z_func.name(), domain, z_func.range());
 
-  return std::make_shared<Z3Sort>(func, *ctx);
+  return make_shared_sort(func, *ctx);
 }
 
 bool Z3Term::is_symbol() const

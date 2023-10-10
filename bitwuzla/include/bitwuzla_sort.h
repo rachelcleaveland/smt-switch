@@ -56,4 +56,6 @@ class BzlaSort : public AbsSort
   friend class BzlaSolver;
 };
 
+Sort make_shared_sort(const BitwuzlaSort * s);
+
 }  // namespace smt

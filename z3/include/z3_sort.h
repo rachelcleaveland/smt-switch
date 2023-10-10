@@ -74,4 +74,7 @@ class Z3Sort : public AbsSort
   friend class Z3Solver;
 };
 
+Sort make_shared_sort(z3::sort s, z3::context & c);
+Sort make_shared_sort(z3::func_decl s, z3::context & c);
+
 }  // namespace smt

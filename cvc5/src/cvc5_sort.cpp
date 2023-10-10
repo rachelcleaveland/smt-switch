@@ -21,6 +21,12 @@
 
 namespace smt {
 
+Sort make_shared_sort(cvc5::Sort s) {
+  Cvc5Sort *cvcs = new Cvc5Sort(s);
+  AbsSort *abss = dynamic_cast<AbsSort *>(cvcs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
 // struct for hashing
 std::hash<cvc5::Sort> sorthash;
 
@@ -32,12 +38,12 @@ uint64_t Cvc5Sort::get_width() const { return sort.getBitVectorSize(); }
 
 Sort Cvc5Sort::get_indexsort() const
 {
-  return std::make_shared<Cvc5Sort>(sort.getArrayIndexSort());
+  return make_shared_sort(sort.getArrayIndexSort());
 }
 
 Sort Cvc5Sort::get_elemsort() const
 {
-  return std::make_shared<Cvc5Sort>(sort.getArrayElementSort());
+  return make_shared_sort(sort.getArrayElementSort());
 }
 
 SortVec Cvc5Sort::get_domain_sorts() const
@@ -56,7 +62,7 @@ SortVec Cvc5Sort::get_domain_sorts() const
 
 Sort Cvc5Sort::get_codomain_sort() const
 {
-  return std::make_shared<Cvc5Sort>(sort.getFunctionCodomainSort());
+  return make_shared_sort(sort.getFunctionCodomainSort());
 }
 
 std::string Cvc5Sort::get_uninterpreted_name() const { return sort.toString(); }
@@ -85,14 +91,14 @@ SortVec Cvc5Sort::get_uninterpreted_param_sorts() const
   SortVec param_sorts;
   for (auto cs : sort.getInstantiatedParameters())
   {
-    param_sorts.push_back(std::make_shared<Cvc5Sort>(cs));
+    param_sorts.push_back(make_shared_sort(cs));
   }
   return param_sorts;
 }
 
 bool Cvc5Sort::compare(const Sort & s) const
 {
-  std::shared_ptr<Cvc5Sort> cs = std::static_pointer_cast<Cvc5Sort>(s);
+  Cvc5Sort *cs = dynamic_cast<Cvc5Sort*>(s.get());
   return sort == cs->sort;
 }
 

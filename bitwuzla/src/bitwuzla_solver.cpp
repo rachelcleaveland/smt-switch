@@ -225,7 +225,7 @@ Sort BzlaSolver::make_sort(SortKind sk) const
 {
   if (sk == BOOL)
   {
-    return make_shared<BzlaSort>(bitwuzla_mk_bool_sort(bzla));
+    return make_shared_sort(bitwuzla_mk_bool_sort(bzla));
   }
   else
   {
@@ -238,7 +238,7 @@ Sort BzlaSolver::make_sort(SortKind sk, uint64_t size) const
 {
   if (sk == BV)
   {
-    return make_shared<BzlaSort>(bitwuzla_mk_bv_sort(bzla, size));
+    return make_shared_sort(bitwuzla_mk_bv_sort(bzla, size));
   }
   else
   {
@@ -259,18 +259,18 @@ Sort BzlaSolver::make_sort(SortKind sk,
                            const Sort & sort1,
                            const Sort & sort2) const
 {
-  shared_ptr<BzlaSort> bsort1 = static_pointer_cast<BzlaSort>(sort1);
-  shared_ptr<BzlaSort> bsort2 = static_pointer_cast<BzlaSort>(sort2);
+  BzlaSort *bsort1 = dynamic_cast<BzlaSort*>(sort1.get());
+  BzlaSort *bsort2 = dynamic_cast<BzlaSort*>(sort2.get());
 
   if (sk == ARRAY)
   {
-    return make_shared<BzlaSort>(
+    return make_shared_sort(
         bitwuzla_mk_array_sort(bzla, bsort1->sort, bsort2->sort));
   }
   else if (sk == FUNCTION)
   {
     vector<const BitwuzlaSort *> domain_sorts({ bsort1->sort });
-    return make_shared<BzlaSort>(bitwuzla_mk_fun_sort(
+    return make_shared_sort(bitwuzla_mk_fun_sort(
         bzla, domain_sorts.size(), domain_sorts.data(), bsort2->sort));
   }
   else
@@ -287,14 +287,14 @@ Sort BzlaSolver::make_sort(SortKind sk,
                            const Sort & sort2,
                            const Sort & sort3) const
 {
-  shared_ptr<BzlaSort> bsort1 = static_pointer_cast<BzlaSort>(sort1);
-  shared_ptr<BzlaSort> bsort2 = static_pointer_cast<BzlaSort>(sort2);
-  shared_ptr<BzlaSort> bsort3 = static_pointer_cast<BzlaSort>(sort3);
+  BzlaSort *bsort1 = dynamic_cast<BzlaSort*>(sort1.get());
+  BzlaSort *bsort2 = dynamic_cast<BzlaSort*>(sort2.get());
+  BzlaSort *bsort3 = dynamic_cast<BzlaSort*>(sort3.get());
 
   if (sk == FUNCTION)
   {
     vector<const BitwuzlaSort *> domain_sorts({ bsort1->sort, bsort2->sort });
-    return make_shared<BzlaSort>(bitwuzla_mk_fun_sort(
+    return make_shared_sort(bitwuzla_mk_fun_sort(
         bzla, domain_sorts.size(), domain_sorts.data(), bsort3->sort));
   }
   else
@@ -316,8 +316,8 @@ Sort BzlaSolver::make_sort(SortKind sk, const SortVec & sorts) const
     }
 
     Sort returnsort = sorts.back();
-    std::shared_ptr<BzlaSort> bzla_return_sort =
-        std::static_pointer_cast<BzlaSort>(returnsort);
+    BzlaSort *bzla_return_sort =
+        dynamic_cast<BzlaSort*>(returnsort.get());
 
     // arity is one less, because last sort is return sort
     uint32_t arity = sorts.size() - 1;
@@ -325,12 +325,12 @@ Sort BzlaSolver::make_sort(SortKind sk, const SortVec & sorts) const
     bzla_sorts.reserve(arity);
     for (size_t i = 0; i < arity; i++)
     {
-      std::shared_ptr<BzlaSort> bs =
-          std::static_pointer_cast<BzlaSort>(sorts[i]);
+      BzlaSort *bs =
+          dynamic_cast<BzlaSort*>(sorts[i].get());
       bzla_sorts.push_back(bs->sort);
     }
 
-    return std::make_shared<BzlaSort>(bitwuzla_mk_fun_sort(
+    return make_shared_sort(bitwuzla_mk_fun_sort(
         bzla, arity, bzla_sorts.data(), bzla_return_sort->sort));
   }
   else if (sorts.size() == 1)
@@ -433,7 +433,7 @@ Term BzlaSolver::make_term(int64_t i, const Sort & sort) const
         + to_string(sk));
   }
 
-  shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
+  BzlaSort *bsort = dynamic_cast<BzlaSort*>(sort.get());
   return make_shared_term(
       bitwuzla_mk_bv_value_uint64(bzla, bsort->sort, i));
 }
@@ -457,7 +457,7 @@ Term BzlaSolver::make_term(const std::string val,
                                   " Options are 2, 10, and 16");
   }
 
-  shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
+  BzlaSort *bsort = dynamic_cast<BzlaSort*>(sort.get());
   return make_shared_term(
       bitwuzla_mk_bv_value(bzla, bsort->sort, val.c_str(), baseit->second));
 }
@@ -489,7 +489,7 @@ Term BzlaSolver::make_symbol(const string name, const Sort & sort)
   {
     throw IncorrectUsageException("Symbol name " + name + " already used.");
   }
-  shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
+  BzlaSort *bsort = dynamic_cast<BzlaSort*>(sort.get());
   Term sym =
       make_shared_term(bitwuzla_mk_const(bzla, bsort->sort, name.c_str()));
   symbol_table[name] = sym;
@@ -508,7 +508,7 @@ Term BzlaSolver::get_symbol(const string & name)
 
 Term BzlaSolver::make_param(const std::string name, const Sort & sort)
 {
-  shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(sort);
+  BzlaSort *bsort = dynamic_cast<BzlaSort*>(sort.get());
   return make_shared_term(
       bitwuzla_mk_var(bzla, bsort->sort, name.c_str()));
 }

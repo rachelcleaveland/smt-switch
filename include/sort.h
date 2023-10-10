@@ -20,6 +20,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "assert.h"
 #include "ops.h"
 #include "datatype.h"
 #include "smt_defs.h"

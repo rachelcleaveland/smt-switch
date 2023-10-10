@@ -65,16 +65,13 @@ std::string & trim(std::string & str)
 }
 
 Term make_shared_term(Sort sort, Op op, TermVec t, std::string name) {
-  //TermTest r = TestClass<GenericTerm>(t[0].get()); 
   GenericTerm *gt = new GenericTerm(sort,op,t,name);
-  return (RachelsSharedPtr<AbsTerm>(gt)); 
-  //return std::make_shared<Cvc5Term>(t);
+  return RachelsSharedPtr<AbsTerm>(gt); 
 }
 
 Term make_shared_term(Sort sort, Op op, TermVec t, std::string name, bool b) {
   GenericTerm *gt = new GenericTerm(sort,op,t,name,b);
-  return (RachelsSharedPtr<AbsTerm>(gt)); 
-  //return std::make_shared<Cvc5Term>(t);
+  return RachelsSharedPtr<AbsTerm>(gt); 
 }
 
 // class methods implementation
@@ -642,7 +639,8 @@ void GenericSolver::add_selector_self(DatatypeConstructorDecl & dt, const std::s
     newSelector->name = name;
     // Sets the sort to be a placeholder value until the self sort is
     // constructed.
-    newSelector->sort = make_shared<GenericSort>(name);
+    GenericSort *gs = new GenericSort(name);
+    newSelector->sort = RachelsSharedPtr<AbsSort>(gs);
     // This indicates that the sort in this selector will eventually
     // be replaced
     newSelector->finalized = false;
@@ -727,8 +725,8 @@ Term GenericSolver::get_selector(const Sort & s, std::string con, std::string na
         if (((curr_con->get_selector_vector())[f]).name == name)
         {
           found = true;
-          static_pointer_cast<DatatypeComponentSort>(cons_sort)
-              ->set_selector_sort(((curr_con->get_selector_vector())[f]).sort);
+          DatatypeComponentSort *dcs = dynamic_cast<DatatypeComponentSort*>(cons_sort.get());
+          dcs->set_selector_sort(((curr_con->get_selector_vector())[f]).sort);
           break;
         }
       }

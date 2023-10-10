@@ -241,20 +241,20 @@ Sort BoolectorTerm::get_sort() const
   if (boolector_is_bitvec_sort(btor, s))
   {
     uint64_t width = boolector_bitvec_sort_get_width(btor, s);
-    sort = std::make_shared<BoolectorBVSort>(btor, s, width);
+    sort = make_shared_sort(btor, s, width);
   }
   else if (boolector_is_array_sort(btor, s))
   {
     uint64_t idxwidth = boolector_get_index_width(btor, node);
     uint64_t elemwidth = boolector_get_width(btor, node);
     // Note: Boolector does not support multidimensional arrays
-    std::shared_ptr<BoolectorSortBase> idxsort =
-        std::make_shared<BoolectorBVSort>(
+    Sort idxsort =
+        make_shared_sort(
             btor, boolector_bitvec_sort(btor, idxwidth), idxwidth);
-    std::shared_ptr<BoolectorSortBase> elemsort =
-        std::make_shared<BoolectorBVSort>(
+    Sort elemsort =
+        make_shared_sort(
             btor, boolector_bitvec_sort(btor, elemwidth), elemwidth);
-    sort = std::make_shared<BoolectorArraySort>(btor, s, idxsort, elemsort);
+    sort = make_shared_sort(btor, s, idxsort, elemsort);
   }
   else if (boolector_is_fun_sort(btor, s))
   {
@@ -264,7 +264,7 @@ Sort BoolectorTerm::get_sort() const
     uint64_t bcds_width = boolector_bitvec_sort_get_width(btor, bcds);
     // increment reference counter for the sort
     boolector_copy_sort(btor, bcds);
-    Sort cds = std::make_shared<BoolectorBVSort>(btor, bcds, bcds_width);
+    Sort cds = make_shared_sort(btor, bcds, bcds_width);
 
     // boolector has no way of getting domain sorts when arity is not 1
     // it will return a TupleSort but there's no way to unpack them
@@ -275,14 +275,14 @@ Sort BoolectorTerm::get_sort() const
       uint64_t bds_width = boolector_bitvec_sort_get_width(btor, bds);
       // increment reference counter for the sort
       boolector_copy_sort(btor, bds);
-      Sort ds = std::make_shared<BoolectorBVSort>(btor, bds, bds_width);
-      sort = std::make_shared<BoolectorUFSort>(btor, s, SortVec{ ds }, cds);
+      Sort ds = make_shared_sort(btor, bds, bds_width);
+      sort = make_shared_sort(btor, s, SortVec{ ds }, cds);
     }
     else
     {
       // constructor will mark this sort incomplete so it knows that it can't
       // return the domain sorts
-      sort = std::make_shared<BoolectorUFSort>(btor, s, cds);
+      sort = make_shared_sort(btor, s, cds);
     }
   }
   else

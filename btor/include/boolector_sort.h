@@ -145,5 +145,11 @@ class BoolectorUFSort : public BoolectorSortBase
 
   friend class BoolectorSolver;
 };
+
+Sort make_shared_sort(SortKind sk, Btor * b, BoolectorSort s);
+Sort make_shared_sort(Btor * b, BoolectorSort s, uint64_t w);
+Sort make_shared_sort(Btor * b, BoolectorSort s, Sort is, Sort es);
+Sort make_shared_sort(Btor * b, BoolectorSort s, SortVec sorts, Sort sort);
+
 }  // namespace smt
 

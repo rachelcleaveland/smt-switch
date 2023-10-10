@@ -41,22 +41,14 @@ const unordered_set<SortKind> supported_sortkinds_for_get_value(
 /**
  * Create a new shared pointer. 
  */
-Term make_shared_term(Term t, Sort s, Op op, TermVec tv, size_t id) {
-  //std::vector<Term> vect{t}; // HACKY -- FIX THIS
-  // The issue is that taking in a Term t directly instead of vect
-  // causes an error ('t' has incomplete type in the constructors for
-  // RachelsSharedPointer and TermValue), but there is no error when
-  // a Term is inside of a vector. Figure out how to avoid this hack. 
+Term make_shared_term(Term t, Sort s, Op op, TermVec tv, size_t id) { 
   LoggingTerm *lt = new LoggingTerm(t,s,op,tv,id);
   return RachelsSharedPtr<AbsTerm>(lt);
-  //return (RachelsSharedPtr<LoggingTerm>(vect,s,op,tv,id)).cast_shared_pointer<AbsTerm>(); 
 }
 
 Term make_shared_term(Term t, Sort s, Op o, TermVec tv, std::string name, bool b, size_t id) {
-  //std::vector<Term> vect{t};
   LoggingTerm *lt = new LoggingTerm(t,s,o,tv,name,b,id);
   return RachelsSharedPtr<AbsTerm>(lt);
-  //return (RachelsSharedPtr<LoggingTerm>(vect,s,o,tv,name,b,id)).cast_shared_pointer<AbsTerm>();
 }
 
 // implementations
@@ -92,7 +84,7 @@ Sort LoggingSolver::make_sort(const SortKind sk, uint64_t size) const
 
 Sort LoggingSolver::make_sort(const SortKind sk, const Sort & sort1) const
 {
-  shared_ptr<LoggingSort> ls1 = static_pointer_cast<LoggingSort>(sort1);
+  LoggingSort *ls1 = dynamic_cast<LoggingSort*>(sort1.get());
   Sort sort = wrapped_solver->make_sort(sk, ls1->wrapped_sort);
   return make_logging_sort(sk, sort, sort1);
 }
@@ -101,8 +93,8 @@ Sort LoggingSolver::make_sort(const SortKind sk,
                               const Sort & sort1,
                               const Sort & sort2) const
 {
-  shared_ptr<LoggingSort> ls1 = static_pointer_cast<LoggingSort>(sort1);
-  shared_ptr<LoggingSort> ls2 = static_pointer_cast<LoggingSort>(sort2);
+  LoggingSort *ls1 = dynamic_cast<LoggingSort*>(sort1.get());
+  LoggingSort *ls2 = dynamic_cast<LoggingSort*>(sort2.get());
   Sort sort =
       wrapped_solver->make_sort(sk, ls1->wrapped_sort, ls2->wrapped_sort);
   return make_logging_sort(sk, sort, sort1, sort2);
@@ -113,10 +105,10 @@ Sort LoggingSolver::make_sort(const SortKind sk,
                               const Sort & sort2,
                               const Sort & sort3) const
 {
-  shared_ptr<LoggingSort> ls1 = static_pointer_cast<LoggingSort>(sort1);
+  LoggingSort *ls1 = dynamic_cast<LoggingSort*>(sort1.get());
 
-  shared_ptr<LoggingSort> ls2 = static_pointer_cast<LoggingSort>(sort2);
-  shared_ptr<LoggingSort> ls3 = static_pointer_cast<LoggingSort>(sort3);
+  LoggingSort *ls2 = dynamic_cast<LoggingSort*>(sort2.get());
+  LoggingSort *ls3 = dynamic_cast<LoggingSort*>(sort3.get());
   Sort sort = wrapped_solver->make_sort(
       sk, ls1->wrapped_sort, ls2->wrapped_sort, ls3->wrapped_sort);
   return make_logging_sort(sk, sort, sort1, sort2, sort3);
@@ -128,7 +120,7 @@ Sort LoggingSolver::make_sort(SortKind sk, const SortVec & sorts) const
   SortVec sub_sorts;
   for (auto s : sorts)
   {
-    sub_sorts.push_back(static_pointer_cast<LoggingSort>(s)->wrapped_sort);
+    sub_sorts.push_back(dynamic_cast<LoggingSort*>(s.get())->wrapped_sort);
   }
   Sort sort = wrapped_solver->make_sort(sk, sub_sorts);
   return make_logging_sort(sk, sort, sorts);
@@ -137,13 +129,13 @@ Sort LoggingSolver::make_sort(SortKind sk, const SortVec & sorts) const
 Sort LoggingSolver::make_sort(const Sort & sort_con,
                               const SortVec & sorts) const
 {
-  Sort sub_sort_con = static_pointer_cast<LoggingSort>(sort_con)->wrapped_sort;
+  Sort sub_sort_con = dynamic_cast<LoggingSort*>(sort_con.get())->wrapped_sort;
 
   // convert to sorts stored by LoggingSorts
   SortVec sub_sorts;
   for (auto s : sorts)
   {
-    sub_sorts.push_back(static_pointer_cast<LoggingSort>(s)->wrapped_sort);
+    sub_sorts.push_back(dynamic_cast<LoggingSort*>(s.get())->wrapped_sort);
   }
 
   Sort ressort = wrapped_solver->make_sort(sub_sort_con, sub_sorts);
@@ -208,7 +200,7 @@ Term LoggingSolver::make_term(bool b) const
 
 Term LoggingSolver::make_term(int64_t i, const Sort & sort) const
 {
-  shared_ptr<LoggingSort> lsort = static_pointer_cast<LoggingSort>(sort);
+  LoggingSort *lsort = dynamic_cast<LoggingSort*>(sort.get());
   Term wrapped_res = wrapped_solver->make_term(i, lsort->wrapped_sort);
   Term res = make_shared_term(
       wrapped_res, sort, Op(), TermVec{}, next_term_id);
@@ -230,7 +222,7 @@ Term LoggingSolver::make_term(const string name,
                               const Sort & sort,
                               uint64_t base) const
 {
-  shared_ptr<LoggingSort> lsort = static_pointer_cast<LoggingSort>(sort);
+  LoggingSort *lsort = dynamic_cast<LoggingSort*>(sort.get());
   Term wrapped_res = wrapped_solver->make_term(name, lsort->wrapped_sort, base);
   Term res = make_shared_term(
       wrapped_res, sort, Op(), TermVec{}, next_term_id);
@@ -252,7 +244,7 @@ Term LoggingSolver::make_term(const Term & val, const Sort & sort) const
 {
   LoggingTerm *lval = dynamic_cast<LoggingTerm *>(val.get());
   //RachelsSharedPtr<LoggingTerm> lval = cast_ptr<LoggingTerm>(val);
-  shared_ptr<LoggingSort> lsort = static_pointer_cast<LoggingSort>(sort);
+  LoggingSort *lsort = dynamic_cast<LoggingSort*>(sort.get());
   Term wrapped_res =
       wrapped_solver->make_term(lval->wrapped_term, lsort->wrapped_sort);
   // this make_term is for constant arrays
@@ -282,7 +274,7 @@ Term LoggingSolver::make_term(const Term & val, const Sort & sort) const
 
 Term LoggingSolver::make_symbol(const string name, const Sort & sort)
 {
-  shared_ptr<LoggingSort> lsort = static_pointer_cast<LoggingSort>(sort);
+  LoggingSort *lsort = dynamic_cast<LoggingSort*>(sort.get());
   Term wrapped_sym = wrapped_solver->make_symbol(name, lsort->wrapped_sort);
   // bool true means it's a symbol
   Term res = make_shared_term(
@@ -315,7 +307,7 @@ Term LoggingSolver::get_symbol(const std::string & name)
 
 Term LoggingSolver::make_param(const string name, const Sort & sort)
 {
-  shared_ptr<LoggingSort> lsort = static_pointer_cast<LoggingSort>(sort);
+  LoggingSort *lsort = dynamic_cast<LoggingSort*>(sort.get());
   Term wrapped_param = wrapped_solver->make_param(name, lsort->wrapped_sort);
   // bool false means it's not a symbol
   Term res = make_shared_term(
@@ -339,7 +331,8 @@ Term LoggingSolver::make_term(const Op op, const Term & t) const
   LoggingTerm *lt = dynamic_cast<LoggingTerm *>(t.get());
   //RachelsSharedPtr<LoggingTerm> lt = cast_ptr<LoggingTerm>(t);
   Term wrapped_res = wrapped_solver->make_term(op, lt->wrapped_term);
-  Sort res_logging_sort = compute_sort(op, this, { t->get_sort() });
+  SortVec sorts = { t->get_sort() };
+  Sort res_logging_sort = compute_sort(op, this, sorts);
 
   // check that child is already in hash table
   assert(hashtable->contains(t));

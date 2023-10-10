@@ -581,7 +581,7 @@ Sort store_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts)
 Sort selector_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts)
 {
   Sort parent_sort = (sorts[0])->get_domain_sorts()[0];
-  return static_pointer_cast<DatatypeComponentSort>(sorts[0])
+  return dynamic_cast<DatatypeComponentSort*>(sorts[0].get())
       ->get_codomain_sort();
 }
 Sort constructor_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts)

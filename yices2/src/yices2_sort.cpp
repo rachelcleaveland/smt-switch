@@ -24,6 +24,18 @@ namespace smt {
 
 // Yices2Sort implementation
 
+Sort make_shared_sort(type_t sort) {
+  Yices2Sort *zs = new Yices2Sort(sort);
+  AbsSort *abss = dynamic_cast<AbsSort *>(zs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
+Sort make_shared_sort(type_t sort, bool b) {
+  Yices2Sort *zs = new Yices2Sort(sort,b);
+  AbsSort *abss = dynamic_cast<AbsSort *>(zs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
 std::size_t Yices2Sort::hash() const
 {
   // type_t is a unique id, see Yices2 docs.
@@ -136,7 +148,7 @@ Datatype Yices2Sort::get_datatype() const
 
 bool Yices2Sort::compare(const Sort & s) const
 {
-  shared_ptr<Yices2Sort> ys = std::static_pointer_cast<Yices2Sort>(s);
+  Yices2Sort *ys = dynamic_cast<Yices2Sort*>(s.get());
   return type == ys->type;
 }
 

@@ -478,7 +478,7 @@ Sort MsatTerm::get_sort() const
 {
   if (!is_uf)
   {
-    return std::make_shared<MsatSort> (env, msat_term_get_type(term));
+    return make_shared_sort(env, msat_term_get_type(term));
   }
   else
   {
@@ -501,7 +501,7 @@ Sort MsatTerm::get_sort() const
                                                param_types.size(),
                                                msat_decl_get_return_type(decl));
 
-    return std::make_shared<MsatSort> (env, funtype, decl);
+    return make_shared_sort(env, funtype, decl);
   }
 }
 

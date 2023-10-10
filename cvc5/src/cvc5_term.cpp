@@ -255,7 +255,7 @@ Op Cvc5Term::get_op() const
 
 Sort Cvc5Term::get_sort() const
 {
-  return std::make_shared<Cvc5Sort>(term.getSort());
+  return make_shared_sort(term.getSort());
 }
 
 bool Cvc5Term::is_symbol() const

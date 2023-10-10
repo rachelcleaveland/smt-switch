@@ -58,5 +58,8 @@ class Yices2Sort : public AbsSort
   friend class Yices2Solver;
 };
 
+Sort make_shared_sort(type_t sort);
+Sort make_shared_sort(type_t sort, bool b);
+
 }  // namespace smt
 

@@ -56,4 +56,6 @@ class Cvc5Sort : public AbsSort
   friend class Cvc5Solver;
 };
 
+Sort make_shared_sort(cvc5::Sort s);
+
 }  // namespace smt

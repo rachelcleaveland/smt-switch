@@ -25,11 +25,10 @@ template <typename T>
 class RachelsSharedPtr;
 
 class AbsSort;
-using Sort = std::shared_ptr<AbsSort>; // RachelsSharedPtr<AbsSort>; //
+using Sort = RachelsSharedPtr<AbsSort>; //std::shared_ptr<AbsSort>; // RachelsSharedPtr<AbsSort>; //
 
 class AbsTerm;
 using Term = RachelsSharedPtr<AbsTerm>;
-//using Term = std::shared_ptr<AbsTerm>;
 
 class AbsSmtSolver;
 using SmtSolver = std::shared_ptr<AbsSmtSolver>;

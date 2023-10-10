@@ -22,6 +22,12 @@ using namespace std;
 
 namespace smt {
 
+Sort make_shared_sort(const BitwuzlaSort * s) {
+  BzlaSort *bs = new BzlaSort(s);
+  AbsSort *abss = dynamic_cast<AbsSort *>(bs);
+  return RachelsSharedPtr<AbsSort>(abss);
+}
+
 BzlaSort::~BzlaSort()
 {
   // TODO: figure out if sorts need to be destroyed
@@ -33,12 +39,12 @@ uint64_t BzlaSort::get_width() const { return bitwuzla_sort_bv_get_size(sort); }
 
 Sort BzlaSort::get_indexsort() const
 {
-  return make_shared<BzlaSort>(bitwuzla_sort_array_get_index(sort));
+  return make_shared_sort(bitwuzla_sort_array_get_index(sort));
 }
 
 Sort BzlaSort::get_elemsort() const
 {
-  return make_shared<BzlaSort>(bitwuzla_sort_array_get_element(sort));
+  return make_shared_sort(bitwuzla_sort_array_get_element(sort));
 }
 
 SortVec BzlaSort::get_domain_sorts() const
@@ -51,7 +57,7 @@ SortVec BzlaSort::get_domain_sorts() const
   {
     // array is zero-terminated -- shouldn't hit the end
     assert(bsorts);
-    domain_sorts.push_back(make_shared<BzlaSort>(*bsorts));
+    domain_sorts.push_back(make_shared_sort(*bsorts));
     ++bsorts;
   }
   // should be at end of the array
@@ -62,7 +68,7 @@ SortVec BzlaSort::get_domain_sorts() const
 
 Sort BzlaSort::get_codomain_sort() const
 {
-  return make_shared<BzlaSort>(bitwuzla_sort_fun_get_codomain(sort));
+  return make_shared_sort(bitwuzla_sort_fun_get_codomain(sort));
 }
 
 std::string BzlaSort::get_uninterpreted_name() const
@@ -85,7 +91,7 @@ Datatype BzlaSort::get_datatype() const
 
 bool BzlaSort::compare(const Sort & s) const
 {
-  shared_ptr<BzlaSort> bsort = static_pointer_cast<BzlaSort>(s);
+  BzlaSort *bsort = dynamic_cast<BzlaSort*>(s.get());
   return bitwuzla_sort_is_equal(sort, bsort->sort);
 }
 
