@@ -36,7 +36,8 @@ int main()
   // test with clearing assumption clauses every
   // check-sat/check-sat-assuming call
   // NOTE this is only for testing / advanced usage
-  static_pointer_cast<MsatSolver>(s)->set_max_assump_clauses(0);
+  MsatSolver *msolver = dynamic_cast<MsatSolver*>(s.get());
+  msolver->set_max_assump_clauses(0);
 
   Sort bvsort8 = s->make_sort(BV, 8);
   Term x = s->make_symbol("x", bvsort8);

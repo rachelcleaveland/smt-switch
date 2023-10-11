@@ -90,4 +90,8 @@ class GenericDatatype : public AbsDatatype
   friend class GenericSolver;
 };
 
+DatatypeDecl make_shared_datatype_decl(const std::string & s);
+Datatype make_shared_datatype(DatatypeDecl dt);
+DatatypeConstructorDecl make_shared_datatype_constructor(const std::string s);
+
 }  // namespace smt

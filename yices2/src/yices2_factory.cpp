@@ -24,6 +24,12 @@ namespace smt {
 
 bool initialized = false;
 
+SmtSolver make_shared_solver() {
+  Yices2Solver *bs = new Yices2Solver();
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(bs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 /* Yices2SolverFactory implementation with logging */
 SmtSolver Yices2SolverFactory::create(bool logging)
 {
@@ -40,10 +46,10 @@ SmtSolver Yices2SolverFactory::create(bool logging)
     initialized = true;
   }
 
-  SmtSolver solver = std::make_shared<Yices2Solver>();
+  SmtSolver solver = make_shared_solver();
   if (logging)
   {
-    solver = std::make_shared<LoggingSolver>(solver);
+    solver = create_logging_solver(solver);
   }
   return solver;
 }

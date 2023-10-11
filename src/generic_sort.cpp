@@ -237,7 +237,7 @@ string GenericSort::compute_string() const {
     }
     else if (get_sort_kind() == SortKind::DATATYPE)
     {
-      return static_pointer_cast<GenericDatatype>(get_datatype())->get_name();
+      return dynamic_cast<GenericDatatype*>(get_datatype().get())->get_name();
     }
     else if (get_sort_kind() == SortKind::CONSTRUCTOR
              || get_sort_kind() == SortKind::SELECTOR
@@ -306,7 +306,7 @@ bool GenericSort::compare(const Sort & s) const
       assert(sk == DATATYPE);
       GenericDatatypeSort *other_type_cast =
           dynamic_cast<GenericDatatypeSort*>(s.get());
-      return static_pointer_cast<GenericDatatype>(get_datatype())->get_name()
+      return dynamic_cast<GenericDatatype*>(get_datatype().get())->get_name()
              == other_type_cast->compute_string();
     }
     case NUM_SORT_KINDS:
@@ -413,7 +413,7 @@ Datatype GenericDatatypeSort::get_datatype() const { return gdt; }
 
 std::string GenericDatatypeSort::compute_string() const
 {
-  return static_pointer_cast<GenericDatatype>(gdt)->get_name();
+  return dynamic_cast<GenericDatatype*>(gdt.get())->get_name();
 }
 
 bool GenericDatatypeSort::compare(const Sort & s) const
@@ -459,13 +459,13 @@ SortVec DatatypeComponentSort::get_domain_sorts() const
   {
     GenericDatatypeSort *cast_dt_sort =
         dynamic_cast<GenericDatatypeSort*>(dt_sort.get());
-    shared_ptr<GenericDatatype> gdt =
-        static_pointer_cast<GenericDatatype>(cast_dt_sort->get_datatype());
+    GenericDatatype *gdt =
+        dynamic_cast<GenericDatatype*>(cast_dt_sort->get_datatype().get());
     for (int i = 0; i < gdt->get_num_constructors(); ++i)
     {
-      shared_ptr<GenericDatatypeConstructorDecl> curr_con =
-          static_pointer_cast<GenericDatatypeConstructorDecl>(
-              gdt->get_cons_vector()[i]);
+      GenericDatatypeConstructorDecl *curr_con =
+          dynamic_cast<GenericDatatypeConstructorDecl*>(
+              gdt->get_cons_vector()[i].get());
       if (curr_con->get_name() == name)
       {
         for (int f = 0; f < curr_con->get_selector_count(); ++f)
@@ -509,8 +509,8 @@ void DatatypeComponentSort::set_selector_sort(Sort new_selector_sort)
 
 int DatatypeComponentSort::get_num_selectors() const
 {
-  shared_ptr<GenericDatatype> dt =
-      static_pointer_cast<GenericDatatype>(dt_sort->get_datatype());
+  GenericDatatype *dt =
+      dynamic_cast<GenericDatatype*>(dt_sort->get_datatype().get());
   return dt->get_num_selectors(name);
 }
 

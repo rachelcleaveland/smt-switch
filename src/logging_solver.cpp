@@ -51,6 +51,12 @@ Term make_shared_term(Term t, Sort s, Op o, TermVec tv, std::string name, bool b
   return RachelsSharedPtr<AbsTerm>(lt);
 }
 
+SmtSolver create_logging_solver(SmtSolver solver) {
+  LoggingSolver *ls = new LoggingSolver(solver);
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(ls);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 // implementations
 
 LoggingSolver::LoggingSolver(SmtSolver s)

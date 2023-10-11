@@ -21,13 +21,19 @@
 
 namespace smt {
 
+SmtSolver make_shared_solver() {
+  BzlaSolver *bs = new BzlaSolver();
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(bs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 /* BitwuzlaSolverFactory implementation */
 SmtSolver BitwuzlaSolverFactory::create(bool logging)
 {
-  SmtSolver solver = std::make_shared<BzlaSolver>();
+  SmtSolver solver = make_shared_solver();
   if (logging)
   {
-    solver = std::make_shared<LoggingSolver>(solver);
+    solver = create_logging_solver(solver);
   }
   return solver;
 }

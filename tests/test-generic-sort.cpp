@@ -72,24 +72,21 @@ int main()
   assert(us1->get_arity() == 0);
 
   // Creates a new datatype with one constructor
-  DatatypeDecl new_dt_decl = make_shared<GenericDatatypeDecl>("testSort1");
-  shared_ptr<GenericDatatype> new_dt =
-      shared_ptr<GenericDatatype>(new GenericDatatype(new_dt_decl));
-  shared_ptr<GenericDatatypeConstructorDecl> new_dt_cons_decl =
-      shared_ptr<GenericDatatypeConstructorDecl>(
-          new GenericDatatypeConstructorDecl("Cons"));
-  new_dt->add_constructor(new_dt_cons_decl);
+  DatatypeDecl new_dt_decl = make_shared_datatype_decl("testSort1");
+  Datatype new_dt = make_shared_datatype(new_dt_decl);
+  GenericDatatype *new_dt_ = dynamic_cast<GenericDatatype*>(new_dt.get());
+  DatatypeConstructorDecl new_dt_cons_decl =
+      make_shared_datatype_constructor("Cons");
+  new_dt_->add_constructor(new_dt_cons_decl);
   shared_ptr<GenericDatatypeSort> dt_sort =
       make_shared<GenericDatatypeSort>(new_dt);
 
   // Creates a different datatype with one constructor
-  DatatypeDecl new2_dt_decl = make_shared<GenericDatatypeDecl>("testSort2");
-  shared_ptr<GenericDatatype> new2_dt =
-      shared_ptr<GenericDatatype>(new GenericDatatype(new2_dt_decl));
-  shared_ptr<GenericDatatypeConstructorDecl> new2_dt_cons_decl =
-      shared_ptr<GenericDatatypeConstructorDecl>(
-          new GenericDatatypeConstructorDecl("test2"));
-  new2_dt->add_constructor(new2_dt_cons_decl);
+  DatatypeDecl new2_dt_decl = make_shared_datatype_decl("testSort2");
+  Datatype new2_dt = make_shared_datatype(new2_dt_decl);
+  GenericDatatype *new2_dt_ = dynamic_cast<GenericDatatype*>(new2_dt.get());
+  DatatypeConstructorDecl new2_dt_cons_decl = make_shared_datatype_constructor("test2");
+  new2_dt_->add_constructor(new2_dt_cons_decl);
   shared_ptr<GenericDatatypeSort> dt_sort2 =
       make_shared<GenericDatatypeSort>(new2_dt);
   // Asserts that the sorts are distinct from one another and that the

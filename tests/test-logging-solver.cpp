@@ -39,7 +39,7 @@ class LoggingTests : public ::testing::Test,
     // can mess things up
     // Thus, need to use the "lite" version of solvers
     // before wrapping with a LoggingSolver
-    s = make_shared<LoggingSolver>(create_solver(GetParam()));
+    s = create_logging_solver(create_solver(GetParam()));
     s->set_opt("produce-models", "true");
     bvsort4 = s->make_sort(BV, 4);
     bvsort8 = s->make_sort(BV, 8);

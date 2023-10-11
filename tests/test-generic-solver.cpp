@@ -585,7 +585,7 @@ void new_btor(SmtSolver & gs, int buffer_size)
   string path = (STRFY(BTOR_HOME));
   path += "/build/bin/boolector";
   vector<string> args = { "--incremental" };
-  gs = std::make_shared<GenericSolver>(path, args, buffer_size, buffer_size);
+  gs = create_generic_solver(path, args, buffer_size, buffer_size);
   init_solver(gs);
 }
 
@@ -595,7 +595,7 @@ void new_msat(SmtSolver & gs, int buffer_size)
   string path = (STRFY(MSAT_HOME));
   path += "/bin/mathsat";
   vector<string> args = { "" };
-  gs = std::make_shared<GenericSolver>(path, args, buffer_size, buffer_size);
+  gs = create_generic_solver(path, args, buffer_size, buffer_size);
   init_solver(gs);
 }
 
@@ -605,7 +605,7 @@ void new_yices2(SmtSolver & gs, int buffer_size)
   string path = (STRFY(YICES2_HOME));
   path += "/build/bin/yices_smt2";
   vector<string> args = { "--incremental" };
-  gs = std::make_shared<GenericSolver>(path, args, buffer_size, buffer_size);
+  gs = create_generic_solver(path, args, buffer_size, buffer_size);
   init_solver(gs);
 }
 
@@ -615,7 +615,7 @@ void new_cvc5(SmtSolver & gs, int buffer_size)
   string path = (STRFY(CVC5_HOME));
   path += "/build/bin/cvc5";
   vector<string> args = { "--lang=smt2", "--incremental", "--dag-thresh=0" };
-  gs = std::make_shared<GenericSolver>(path, args, buffer_size, buffer_size);
+  gs = create_generic_solver(path, args, buffer_size, buffer_size);
   init_solver(gs);
 }
 
@@ -888,7 +888,7 @@ void test_binary(string path, vector<string> args)
 {
   std::cout << "testing binary: " << path << std::endl;
   std::cout << "constructing solver" << std::endl;
-  SmtSolver gs = std::make_shared<GenericSolver>(path, args, 5, 5);
+  SmtSolver gs = create_generic_solver(path, args, 5, 5);
   std::cout << "setting an option" << std::endl;
   gs->set_opt("produce-models", "true");
 }

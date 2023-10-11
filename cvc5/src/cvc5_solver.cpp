@@ -722,8 +722,8 @@ Sort Cvc5Solver::make_sort(const DatatypeDecl & d) const
 {
   try
   {
-    std::shared_ptr<Cvc5DatatypeDecl> cd =
-        std::static_pointer_cast<Cvc5DatatypeDecl>(d);
+    Cvc5DatatypeDecl *cd =
+        dynamic_cast<Cvc5DatatypeDecl*>(d.get());
 
     return make_shared_sort(solver.mkDatatypeSort(cd->datatypedecl));
   }
@@ -737,7 +737,7 @@ DatatypeDecl Cvc5Solver::make_datatype_decl(const std::string & s)
 {
   try
   {
-    return std::make_shared<Cvc5DatatypeDecl>(solver.mkDatatypeDecl(s));
+    return make_shared_datatype_decl(solver.mkDatatypeDecl(s));
   }
   catch (::cvc5::CVC5ApiException & e)
   {
@@ -750,7 +750,7 @@ DatatypeConstructorDecl Cvc5Solver::make_datatype_constructor_decl(
 {
   try
   {
-    return std::make_shared<Cvc5DatatypeConstructorDecl>(
+    return make_shared_datatype_constructor(
         solver.mkDatatypeConstructorDecl(s));
   }
   catch (::cvc5::CVC5ApiException & e)
@@ -764,10 +764,10 @@ void Cvc5Solver::add_constructor(DatatypeDecl & dt,
 {
   try
   {
-    std::shared_ptr<Cvc5DatatypeDecl> cdt =
-        std::static_pointer_cast<Cvc5DatatypeDecl>(dt);
-    std::shared_ptr<Cvc5DatatypeConstructorDecl> ccon =
-        std::static_pointer_cast<Cvc5DatatypeConstructorDecl>(con);
+    Cvc5DatatypeDecl *cdt =
+        dynamic_cast<Cvc5DatatypeDecl*>(dt.get());
+    Cvc5DatatypeConstructorDecl *ccon =
+        dynamic_cast<Cvc5DatatypeConstructorDecl*>(con.get());
     cdt->datatypedecl.addConstructor(ccon->datatypeconstructordecl);
   }
   catch (::cvc5::CVC5ApiException & e)
@@ -782,8 +782,8 @@ void Cvc5Solver::add_selector(DatatypeConstructorDecl & dt,
 {
   try
   {
-    std::shared_ptr<Cvc5DatatypeConstructorDecl> cdt =
-        std::static_pointer_cast<Cvc5DatatypeConstructorDecl>(dt);
+    Cvc5DatatypeConstructorDecl *cdt =
+        dynamic_cast<Cvc5DatatypeConstructorDecl*>(dt.get());
     Cvc5Sort *cs = dynamic_cast<Cvc5Sort*>(s.get());
     cdt->datatypeconstructordecl.addSelector(name, cs->sort);
   }
@@ -798,8 +798,8 @@ void Cvc5Solver::add_selector_self(DatatypeConstructorDecl & dt,
 {
   try
   {
-    std::shared_ptr<Cvc5DatatypeConstructorDecl> cdt =
-        std::static_pointer_cast<Cvc5DatatypeConstructorDecl>(dt);
+    Cvc5DatatypeConstructorDecl *cdt =
+        dynamic_cast<Cvc5DatatypeConstructorDecl*>(dt.get());
     cdt->datatypeconstructordecl.addSelectorSelf(name);
   }
   catch (::cvc5::CVC5ApiException & e)
@@ -874,7 +874,7 @@ SortVec Cvc5Solver::make_datatype_sorts(
     for (const auto & d : decls)
     {
       cvc5_decls.push_back(
-          std::static_pointer_cast<Cvc5DatatypeDecl>(d)->datatypedecl);
+          dynamic_cast<Cvc5DatatypeDecl*>(d.get())->datatypedecl);
     }
 
     for (const auto & csort : solver.mkDatatypeSorts(cvc5_decls))

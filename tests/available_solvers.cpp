@@ -138,11 +138,11 @@ SmtSolver create_solver(SolverConfiguration sc)
         std::string path = (STRFY(CVC5_HOME));
         path += "/build/bin/cvc5";
         std::vector<std::string> args = { "--lang=smt2", "--incremental", "--dag-thresh=0", "-q" };
-        SmtSolver generic_solver = std::make_shared<GenericSolver>(path, args, 5, 5);
+        SmtSolver generic_solver = create_generic_solver(path, args, 5, 5);
         if (logging) {
-          return std::make_shared<LoggingSolver>(generic_solver);
+          return create_logging_solver(generic_solver);
         } else {
-          return std::make_shared<GenericSolver>(path, args, 5, 5);
+          return create_generic_solver(path, args, 5, 5);
 
         }
         break;

@@ -25,23 +25,23 @@ template <typename T>
 class RachelsSharedPtr;
 
 class AbsSort;
-using Sort = RachelsSharedPtr<AbsSort>; //std::shared_ptr<AbsSort>; // RachelsSharedPtr<AbsSort>; //
+using Sort = RachelsSharedPtr<AbsSort>;
 
 class AbsTerm;
 using Term = RachelsSharedPtr<AbsTerm>;
 
 class AbsSmtSolver;
-using SmtSolver = std::shared_ptr<AbsSmtSolver>;
+using SmtSolver = RachelsSharedPtr<AbsSmtSolver>; 
 
 // Datatype theory related
 class AbsDatatypeDecl;
-using DatatypeDecl = std::shared_ptr<AbsDatatypeDecl>;
+using DatatypeDecl = RachelsSharedPtr<AbsDatatypeDecl>; //std::shared_ptr<AbsDatatypeDecl>;
 
 class AbsDatatypeConstructorDecl;
-using DatatypeConstructorDecl = std::shared_ptr<AbsDatatypeConstructorDecl>;
+using DatatypeConstructorDecl = RachelsSharedPtr<AbsDatatypeConstructorDecl>; //std::shared_ptr<AbsDatatypeConstructorDecl>;
 
 class AbsDatatype;
-using Datatype = std::shared_ptr<AbsDatatype>;
+using Datatype = RachelsSharedPtr<AbsDatatype>; //std::shared_ptr<AbsDatatype>;
 
 }  // namespace smt
 

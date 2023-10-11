@@ -21,13 +21,19 @@
 
 namespace smt {
 
+SmtSolver make_shared_solver() {
+  Z3Solver *bs = new Z3Solver();
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(bs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 /* Z3SolverFactory implementation with logging */
 SmtSolver Z3SolverFactory::create(bool logging)
 {
-  SmtSolver solver = std::make_shared<Z3Solver>();
+  SmtSolver solver = make_shared_solver();
   if (logging)
   {
-    solver = std::make_shared<LoggingSolver>(solver);
+    solver = create_logging_solver(solver);
   }
   return solver;
 }

@@ -21,23 +21,30 @@
 
 namespace smt {
 
+template <typename T>
+SmtSolver make_shared_solver() {
+  T *bs = new T();
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(bs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 /* MsatSolverFactory implementation */
 
 SmtSolver MsatSolverFactory::create(bool logging)
 {
-  MsatSolver * ms = new MsatSolver();
-  SmtSolver solver(ms);
+  //MsatSolver * ms = new MsatSolver();
+  //SmtSolver solver(ms);
+  SmtSolver solver = make_shared_solver<MsatSolver>();
   if (logging)
   {
-    solver = std::make_shared<LoggingSolver>(solver);
+    solver = create_logging_solver(solver);
   }
   return solver;
 }
 
 SmtSolver MsatSolverFactory::create_interpolating_solver()
 {
-  MsatInterpolatingSolver * mis = new MsatInterpolatingSolver();
-  std::shared_ptr<MsatInterpolatingSolver> s(mis);
+  SmtSolver s = make_shared_solver<MsatInterpolatingSolver>();
   return s;
 }
 

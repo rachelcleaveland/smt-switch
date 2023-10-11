@@ -74,4 +74,8 @@ class Cvc5Datatype : public AbsDatatype
   friend class Cvc5Solver;
 };
 
+Datatype make_shared_datatype(cvc5::Datatype d);
+DatatypeDecl make_shared_datatype_decl(cvc5::DatatypeDecl d);
+DatatypeConstructorDecl make_shared_datatype_constructor(cvc5::DatatypeConstructorDecl d);
+
 }  // namespace smt

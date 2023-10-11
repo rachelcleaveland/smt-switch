@@ -88,25 +88,24 @@ TEST_P(DTTests, DatatypeDecl)
     // Make datatype sort
     DatatypeDecl consListSpec = s->make_datatype_decl("list");
 
-    auto dt_decltest = make_shared<GenericDatatypeDecl>("secondtestdt");
+    auto dt_decltest = make_shared_datatype_decl("secondtestdt");
 
-    std::shared_ptr<GenericDatatype> gdt =
-        make_shared<GenericDatatype>(dt_decltest);
+    Datatype gdt = make_shared_datatype(dt_decltest);
     assert(gdt->get_num_constructors() == 0);
 
-    shared_ptr<GenericDatatypeConstructorDecl> cons2test =
-        shared_ptr<GenericDatatypeConstructorDecl>(
-            new GenericDatatypeConstructorDecl("constest"));
-    gdt->add_constructor(cons2test);
-    assert(gdt->get_num_constructors() == 1);
-    assert(gdt->get_num_selectors("constest") == 0);
-    assert(gdt->get_name() == "secondtestdt");
+    GenericDatatype *gdt_ = dynamic_cast<GenericDatatype*>(gdt.get());
+
+    DatatypeConstructorDecl cons2test = make_shared_datatype_constructor("constest");
+    gdt_->add_constructor(cons2test);
+    assert(gdt_->get_num_constructors() == 1);
+    assert(gdt_->get_num_selectors("constest") == 0);
+    assert(gdt_->get_name() == "secondtestdt");
 
     DatatypeConstructorDecl nildecl = s->make_datatype_constructor_decl("nil");
     DatatypeConstructorDecl consdecl = s->make_datatype_constructor_decl("cons");
 
-    shared_ptr<GenericDatatypeConstructorDecl> consdeclgen =
-        static_pointer_cast<GenericDatatypeConstructorDecl>(consdecl);
+    GenericDatatypeConstructorDecl *consdeclgen =
+        dynamic_cast<GenericDatatypeConstructorDecl*>(consdecl.get());
     DatatypeConstructorDecl cons_copy = consdecl;
     ASSERT_EQ(cons_copy, consdecl);
 
@@ -115,9 +114,10 @@ TEST_P(DTTests, DatatypeDecl)
     s->add_constructor(consListSpec, consdecl);
 
     s->add_selector_self(consdecl, "tail");
-    Sort listsort = s->make_sort(consListSpec);
+    Sort listsort = s->make_sort(consListSpec); // <-- this line is causing problems
 
     DatatypeDecl counterdecl = s->make_datatype_decl("counter");
+
     DatatypeConstructorDecl countercons =
         s->make_datatype_constructor_decl("countercons");
     s->add_constructor(counterdecl, countercons);
@@ -128,9 +128,9 @@ TEST_P(DTTests, DatatypeDecl)
         make_shared<SelectorComponents>();
     newSelector->name = "nonaddselector";
     newSelector->sort = s->make_sort(INT);
-    shared_ptr<GenericDatatype> nonAddDT =
-        make_shared<GenericDatatype>(consListSpec);
-    EXPECT_THROW(nonAddDT->add_selector(nonAddCons, *newSelector),
+    Datatype nonAddDT =
+        make_shared_datatype(consListSpec);
+    EXPECT_THROW(dynamic_cast<GenericDatatype*>(nonAddDT.get())->add_selector(nonAddCons, *newSelector),
                  InternalSolverException);
 
     Sort countersort = s->make_sort(counterdecl);
@@ -180,6 +180,8 @@ TEST_P(DTTests, DatatypeDecl)
     EXPECT_THROW(s->get_constructor(listsort, "kons"), InternalSolverException);
     EXPECT_THROW(s->get_tester(listsort, "head"), InternalSolverException);
     EXPECT_THROW(listdt->get_num_selectors("kons"), InternalSolverException);
+    
+    std::cout << "End of test" << std::endl;
 }
 
 INSTANTIATE_TEST_SUITE_P(ParameterizedSolverDTTests,

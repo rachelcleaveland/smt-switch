@@ -202,7 +202,15 @@ public:
   void reset(T *ptr) {
     d_nv->dec();
     d_nv = new PtrValue<T>(ptr);
+  }
 
+  /**
+   * From shared_ptr. Removes this object as a manager of the pointer 
+   * pointed to by d_nv->d_ptr.
+   */
+  void reset() {
+    d_nv->dec();
+    d_nv = new PtrValue<T>();
   }
 
   /**
@@ -262,4 +270,18 @@ bool operator==(const DatatypeConstructorDecl & d1,
                 const DatatypeConstructorDecl & d2);
 bool operator!=(const DatatypeConstructorDecl & d1,
                 const DatatypeConstructorDecl & d2);
+}
+
+
+namespace std
+{
+  // Specialize the hash function for data structures
+  template<>
+  struct hash<smt::Datatype>
+  {
+    size_t operator()(const smt::Datatype & t) const
+    {
+      return hash<void*>()((void*)(t.get()));
+    }
+  };
 }

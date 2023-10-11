@@ -106,7 +106,7 @@ Datatype Cvc5Sort::get_datatype() const
 {
   try
   {
-    return std::make_shared<Cvc5Datatype>(sort.getDatatype());
+    return make_shared_datatype(sort.getDatatype());
   }
   catch (::cvc5::CVC5ApiException & e)
   {

@@ -20,13 +20,19 @@
 
 namespace smt {
 
+SmtSolver make_shared_solver() {
+  BoolectorSolver *bs = new BoolectorSolver();
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(bs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 /* BoolectorSolverFactory implementation */
 SmtSolver BoolectorSolverFactory::create(bool logging)
 {
-  SmtSolver solver = std::make_shared<BoolectorSolver>();
+  SmtSolver solver = make_shared_solver();
   if (logging)
   {
-    solver = std::make_shared<LoggingSolver>(solver);
+    solver = create_logging_solver(solver);
   }
   return solver;
 }

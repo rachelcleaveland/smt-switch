@@ -21,20 +21,33 @@
 
 namespace smt {
 
+template <typename T>
+SmtSolver make_shared_solver() {
+  T *cs = new T();
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(cs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
+SmtSolver make_shared_solver(SmtSolver s) {
+  LoggingSolver *cs = new LoggingSolver(s);
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(cs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 /* Cvc5SolverFactory implementation */
 SmtSolver Cvc5SolverFactory::create(bool logging)
 {
-  SmtSolver solver = std::make_shared<Cvc5Solver>();
+  SmtSolver solver = make_shared_solver<Cvc5Solver>();
   if (logging)
   {
-    solver = std::make_shared<LoggingSolver>(solver);
+    solver = make_shared_solver(solver);
   }
   return solver;
 }
 
 SmtSolver Cvc5SolverFactory::create_interpolating_solver()
 {
-  SmtSolver solver = std::make_shared<cvc5InterpolatingSolver>();
+  SmtSolver solver = make_shared_solver<cvc5InterpolatingSolver>();
   /*
    * Enable interpolant generation.
    * */

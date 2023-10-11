@@ -112,4 +112,6 @@ class LoggingSolver : public AbsSmtSolver
   mutable size_t next_term_id;  ///< used to give LoggingTerms a unique id
 };
 
+SmtSolver create_logging_solver(SmtSolver generic_solver);
+
 }  // namespace smt

@@ -64,6 +64,14 @@ std::string & trim(std::string & str)
   return str;
 }
 
+SmtSolver create_generic_solver(std::string s, 
+                                std::vector<std::string> args, 
+                                uint w, uint r) {
+  GenericSolver *gs = new GenericSolver(s,args,w,r);
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(gs);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
+}
+
 Term make_shared_term(Sort sort, Op op, TermVec t, std::string name) {
   GenericTerm *gt = new GenericTerm(sort,op,t,name);
   return RachelsSharedPtr<AbsTerm>(gt); 
@@ -90,9 +98,9 @@ GenericSolver::GenericSolver(string path,
       name_term_map(new unordered_map<string, Term>()),
       term_name_map(new unordered_map<Term, string>()),
       name_datatype_map(
-          new unordered_map<string, std::shared_ptr<GenericDatatype>>()),
+          new unordered_map<string, Datatype>()),
       datatype_name_map(
-          new unordered_map<std::shared_ptr<GenericDatatype>, string>())
+          new unordered_map<Datatype, string>())
 {
   // Buffer sizes over 256 caused issues in tests.
   // Until this is investigated, we support a conservative
@@ -353,8 +361,8 @@ std::string GenericSolver::to_smtlib_def(Term term) const
     string result;
     if (gt->get_op() == Apply_Constructor)
     {
-      shared_ptr<GenericDatatype> dt = static_pointer_cast<GenericDatatype>(
-          (gt->get_sort())->get_datatype());
+      GenericDatatype *dt = dynamic_cast<GenericDatatype*>(
+          ((gt->get_sort())->get_datatype()).get());
       nullary_constructor =
           dt->get_num_selectors((*term_name_map)[gt->get_children()[0]]);
       result = nullary_constructor ? "(" : "";
@@ -526,11 +534,12 @@ Sort GenericSolver::make_sort(SortKind sk, const SortVec & sorts) const
 
 Sort GenericSolver::make_sort(const DatatypeDecl & d) const
 {
-  shared_ptr<GenericDatatypeDecl> gdt_decl =
-      static_pointer_cast<GenericDatatypeDecl>(d);
+  GenericDatatypeDecl *gdt_decl =
+      dynamic_cast<GenericDatatypeDecl*>(d.get());
   string dt_decl_name = gdt_decl->get_name();
   assert(name_datatype_map->find(dt_decl_name) != name_datatype_map->end());
-  shared_ptr<GenericDatatype> curr_dt = (*name_datatype_map)[dt_decl_name];
+  GenericDatatype *curr_dt = 
+    dynamic_cast<GenericDatatype*>((*name_datatype_map)[dt_decl_name].get());
   if (name_sort_map->find(dt_decl_name) == name_sort_map->end())
   {
     Sort dt_sort = make_generic_sort(curr_dt);
@@ -547,25 +556,25 @@ Sort GenericSolver::make_sort(const DatatypeDecl & d) const
     {
       DatatypeConstructorDecl curr_dt_cons_decl = curr_dt->get_cons_vector()[i];
       to_solver += " ("
-                   + static_pointer_cast<GenericDatatypeConstructorDecl>(
-                         curr_dt_cons_decl)
+                   + dynamic_cast<GenericDatatypeConstructorDecl*>(
+                         curr_dt_cons_decl.get())
                          ->get_name();
       // Adjust string for each selector
       for (unsigned long f = 0;
-           f < static_pointer_cast<GenericDatatypeConstructorDecl>(
-                   curr_dt_cons_decl)
+           f < dynamic_cast<GenericDatatypeConstructorDecl*>(
+                   curr_dt_cons_decl.get())
                    ->get_selector_vector()
                    .size();
            ++f)
       {
         to_solver += " ( "
-                     + static_pointer_cast<GenericDatatypeConstructorDecl>(
-                           curr_dt_cons_decl)
+                     + dynamic_cast<GenericDatatypeConstructorDecl*>(
+                           curr_dt_cons_decl.get())
                            ->get_selector_vector()[f]
                            .name;
         to_solver += " "
-                     + (static_pointer_cast<GenericDatatypeConstructorDecl>(
-                            curr_dt_cons_decl)
+                     + (dynamic_cast<GenericDatatypeConstructorDecl*>(
+                            curr_dt_cons_decl.get())
                             ->get_selector_vector()[f]
                             .sort)
                            ->to_string()
@@ -591,28 +600,29 @@ Sort GenericSolver::make_sort(const DatatypeDecl & d) const
 
 DatatypeDecl GenericSolver::make_datatype_decl(const std::string & s)
 {
-  DatatypeDecl new_dt_decl = make_shared<GenericDatatypeDecl>(s);
-  shared_ptr<GenericDatatype> new_dt =
-      shared_ptr<GenericDatatype>(new GenericDatatype(new_dt_decl));
-  (*name_datatype_map)[s] = new_dt;
-  (*datatype_name_map)[new_dt] = s;
+  DatatypeDecl new_dt_decl = make_shared_datatype_decl(s);
+  GenericDatatype *gd = new GenericDatatype(new_dt_decl);
+
+
+  Datatype new_dt_abs = RachelsSharedPtr<AbsDatatype>(gd);
+  //GenericDatatype *new_dt = dynamic_cast<GenericDatatype*>(new_dt_abs.get());
+  (*name_datatype_map)[s] = new_dt_abs;
+  (*datatype_name_map)[new_dt_abs] = s;
   return new_dt_decl;
 }
 DatatypeConstructorDecl GenericSolver::make_datatype_constructor_decl(
     const std::string s)
 {
-  shared_ptr<GenericDatatypeConstructorDecl> new_dt_cons_decl =
-      shared_ptr<GenericDatatypeConstructorDecl>(
-          new GenericDatatypeConstructorDecl(s));
+  DatatypeConstructorDecl new_dt_cons_decl = make_shared_datatype_constructor(s);
   return new_dt_cons_decl;
 }
 
 void GenericSolver::add_constructor(DatatypeDecl & dt, const DatatypeConstructorDecl & con) const
   {
-    shared_ptr<GenericDatatypeDecl> gdt_decl =
-        static_pointer_cast<GenericDatatypeDecl>(dt);
+    GenericDatatypeDecl *gdt_decl =
+        dynamic_cast<GenericDatatypeDecl*>(dt.get());
     string name = gdt_decl->get_name();
-    auto gdt = (*name_datatype_map)[name];
+    GenericDatatype *gdt = dynamic_cast<GenericDatatype*>((*name_datatype_map)[name].get());
     gdt->add_constructor(con);
 }
 
@@ -623,8 +633,8 @@ void GenericSolver::add_selector(DatatypeConstructorDecl & dt, const std::string
   newSelector->name = name;
   newSelector->sort = s;
   newSelector->finalized = true;
-  shared_ptr<GenericDatatypeConstructorDecl> gdtc =
-      static_pointer_cast<GenericDatatypeConstructorDecl>(dt);
+  GenericDatatypeConstructorDecl *gdtc =
+      dynamic_cast<GenericDatatypeConstructorDecl*>(dt.get());
   gdtc->add_new_selector(*newSelector);
 }
   
@@ -632,8 +642,8 @@ void GenericSolver::add_selector_self(DatatypeConstructorDecl & dt, const std::s
   {
     shared_ptr<SelectorComponents> newSelector =
         make_shared<SelectorComponents>();
-    shared_ptr<GenericDatatypeConstructorDecl> gdt_cons =
-        static_pointer_cast<GenericDatatypeConstructorDecl>(dt);
+    GenericDatatypeConstructorDecl *gdt_cons =
+        dynamic_cast<GenericDatatypeConstructorDecl*>(dt.get());
     string dt_decl_name = gdt_cons->get_dt_name();
 
     newSelector->name = name;
@@ -645,19 +655,19 @@ void GenericSolver::add_selector_self(DatatypeConstructorDecl & dt, const std::s
     // be replaced
     newSelector->finalized = false;
     assert(name_datatype_map->find(dt_decl_name) != name_datatype_map->end());
-    shared_ptr<GenericDatatype> curr_dt = (*name_datatype_map)[dt_decl_name];
+    GenericDatatype *curr_dt = dynamic_cast<GenericDatatype*>((*name_datatype_map)[dt_decl_name].get());
     gdt_cons->add_new_selector(*newSelector);
 }
 
 Term GenericSolver::get_constructor(const Sort & s, std::string name) const
 {
-  shared_ptr<GenericDatatype> dt =
-      static_pointer_cast<GenericDatatype>(s->get_datatype());
+  GenericDatatype *dt =
+      dynamic_cast<GenericDatatype*>(s->get_datatype().get());
   bool found = false;
   for (int i = 0; i < dt->get_num_constructors(); ++i)
   {
-    if (static_pointer_cast<GenericDatatypeConstructorDecl>(
-            dt->get_cons_vector()[i])
+    if (dynamic_cast<GenericDatatypeConstructorDecl*>(
+            dt->get_cons_vector()[i].get())
             ->get_name()
         == name)
     {
@@ -680,13 +690,13 @@ Term GenericSolver::get_constructor(const Sort & s, std::string name) const
   
 Term GenericSolver::get_tester(const Sort & s, std::string name) const
 {
-  shared_ptr<GenericDatatype> dt =
-      static_pointer_cast<GenericDatatype>(s->get_datatype());
+  GenericDatatype *dt =
+      dynamic_cast<GenericDatatype*>(s->get_datatype().get());
   bool found = false;
   for (int i = 0; i < dt->get_num_constructors(); ++i)
   {
-    if (static_pointer_cast<GenericDatatypeConstructorDecl>(
-            dt->get_cons_vector()[i])
+    if (dynamic_cast<GenericDatatypeConstructorDecl*>(
+            dt->get_cons_vector()[i].get())
             ->get_name()
         == name)
     {
@@ -709,15 +719,15 @@ Term GenericSolver::get_tester(const Sort & s, std::string name) const
 
 Term GenericSolver::get_selector(const Sort & s, std::string con, std::string name) const
 {
-  shared_ptr<GenericDatatype> dt =
-      static_pointer_cast<GenericDatatype>(s->get_datatype());
+  GenericDatatype *dt =
+      dynamic_cast<GenericDatatype*>(s->get_datatype().get());
   bool found = false;
   Sort cons_sort = make_generic_sort(SELECTOR, name, s);
   for (int i = 0; i < dt->get_num_constructors(); ++i)
   {
-    shared_ptr<GenericDatatypeConstructorDecl> curr_con =
-        static_pointer_cast<GenericDatatypeConstructorDecl>(
-            dt->get_cons_vector()[i]);
+    GenericDatatypeConstructorDecl *curr_con =
+        dynamic_cast<GenericDatatypeConstructorDecl*>(
+            dt->get_cons_vector()[i].get());
     if (curr_con->get_name() == con)
     {
       for (int f = 0; f < curr_con->get_selector_count(); ++f)

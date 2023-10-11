@@ -301,7 +301,9 @@ Result PrintingSolver::get_interpolant(const Term & A,
 }
 
 SmtSolver create_printing_solver(SmtSolver wrapped_solver, std::ostream* out_stream, PrintingStyleEnum style) {
-  return std::make_shared<PrintingSolver>(wrapped_solver, out_stream, style);
+  PrintingSolver *ps = new PrintingSolver(wrapped_solver,out_stream,style);
+  AbsSmtSolver *abss = dynamic_cast<AbsSmtSolver*>(ps);
+  return RachelsSharedPtr<AbsSmtSolver>(abss);
 
 }
 
