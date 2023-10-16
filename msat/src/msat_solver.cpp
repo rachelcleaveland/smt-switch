@@ -345,7 +345,7 @@ UnorderedTermMap MsatSolver::get_array_values(const Term & arr,
 {
   initialize_env();
   UnorderedTermMap assignments;
-  out_const_base = nullptr; // RachelsSharedPtr<AbsTerm>();
+  out_const_base = nullptr; 
 
   MsatTerm *marr = dynamic_cast<MsatTerm*>(arr.get());
   msat_term mval = msat_get_model_value(env, marr->term);

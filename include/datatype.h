@@ -120,6 +120,12 @@ public:
   RachelsSharedPtr() : d_nv(new PtrValue<T>()) {}
 
   /**
+   * Constructor taking in a null pointer. Used to allow 
+   * nullptrs to be used for RachelsSharedPtrs.
+   */
+  RachelsSharedPtr(std::nullptr_t n) : d_nv(new PtrValue<T>()) {}
+
+  /**
    * Constructor taking a pointer to an AbsTerm.
    */
   RachelsSharedPtr(T *ptr) : d_nv(new PtrValue<T>(ptr)) {}
