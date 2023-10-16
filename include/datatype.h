@@ -158,6 +158,16 @@ public:
   * @param ptr the ptr to copy
   * @return reference to this ptr
   */
+  RachelsSharedPtr& operator=(const void * p) {
+    assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
+    assert (p == nullptr);
+
+    d_nv->dec();
+    d_nv = new PtrValue<T>();
+
+    return *this;
+  }
+
   RachelsSharedPtr& operator=(const RachelsSharedPtr& ptr) {
     assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
     assert (ptr.d_nv != NULL); // << "Expecting a non-NULL expression value on RHS!";

@@ -499,7 +499,7 @@ Sort DatatypeComponentSort::get_codomain_sort() const
 
   assert(sk == CONSTRUCTOR || sk == TESTER || sk == SELECTOR);
 
-  return RachelsSharedPtr<AbsSort>();
+  return (AbsSort*)nullptr; //RachelsSharedPtr<AbsSort>();
 }
 
 void DatatypeComponentSort::set_selector_sort(Sort new_selector_sort)

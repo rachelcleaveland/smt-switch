@@ -394,7 +394,7 @@ UnorderedTermMap Cvc5Solver::get_array_values(const Term & arr,
   try
   {
     UnorderedTermMap assignments;
-    out_const_base = RachelsSharedPtr<AbsTerm>(); //nullptr;
+    out_const_base = nullptr;
     Cvc5Term *carr_ = dynamic_cast<Cvc5Term *>(arr.get());
     cvc5::Term carr = carr_->get_cvc5_term();
     // get the array value

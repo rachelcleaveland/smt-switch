@@ -155,7 +155,7 @@ Result AbsSmtSolver::get_sequence_interpolants(const TermVec & formulae,
     }
     // if unsat then interpolation didn't fail
     // and interpolant should be non-null
-    assert(!r.is_unsat() || I != RachelsSharedPtr<AbsTerm>());//nullptr);
+    assert(!r.is_unsat() || I != (AbsTerm*)nullptr);//nullptr);
     out_I.push_back(I);
     // move formula to A and remove from Bvec
     // recall they were added to Bvec in reverse order
