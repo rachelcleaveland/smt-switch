@@ -105,25 +105,28 @@ class RachelsSharedPtr {
 
   friend class PtrValue<T>;
 
-  /** The referenced PtrValue */
-  PtrValue<T> *d_nv;
+
 
 public:
 
+  /** The referenced PtrValue */
+  PtrValue<T> *d_nv;
+
   bool nullPtr() const {
+    if (!d_nv) return true;
     return !(d_nv->d_ptr);
   }
 
   /** 
     * Default constructor, makes a null expression.
     */
-  RachelsSharedPtr() : d_nv(new PtrValue<T>()) {}
+  RachelsSharedPtr() : d_nv(nullptr) {}
 
   /**
    * Constructor taking in a null pointer. Used to allow 
    * nullptrs to be used for RachelsSharedPtrs.
    */
-  RachelsSharedPtr(std::nullptr_t n) : d_nv(new PtrValue<T>()) {}
+  RachelsSharedPtr(std::nullptr_t n) : d_nv(nullptr) {}
 
   /**
    * Constructor taking a pointer to an AbsTerm.
@@ -139,23 +142,27 @@ public:
    * Constructor used in casting function, taking a PtrValue.
    */
   RachelsSharedPtr(PtrValue<T>* tv) : d_nv(tv) {
-    if (!d_nv) d_nv = new PtrValue<T>();
-    d_nv->inc();
+    if (d_nv != nullptr) d_nv->inc();
   }
 
   /**
     * Copy constructor.
     * @param ptr the ptr to make copy of
     */
-  RachelsSharedPtr(const RachelsSharedPtr& ptr) : d_nv(ptr.d_nv) {
-    d_nv->inc();
+  RachelsSharedPtr(const RachelsSharedPtr& ptr) {
+    if (&ptr == nullptr) {
+      d_nv = nullptr;
+    } else {
+      d_nv = ptr.d_nv;
+      if (d_nv != nullptr) d_nv->inc();
+    }
   }
 
   /**
     * Destructor. 
     */
   ~RachelsSharedPtr() {
-    d_nv->dec();
+    if (d_nv != nullptr) d_nv->dec();
   }
 
  /**
@@ -164,22 +171,33 @@ public:
   * @param ptr the ptr to copy
   * @return reference to this ptr
   */
-  RachelsSharedPtr& operator=(const void * p) {
-    assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
-    assert (p == nullptr);
-
-    d_nv->dec();
-    d_nv = new PtrValue<T>();
+  RachelsSharedPtr& operator=(std::nullptr_t p) { //const void * p) {
+    //assert (d_nv != nullptr); // << "Expecting a non-NULL expression value!";
+    //if (d_nv == nullptr) {
+    //  d_nv = new PtrValue<T>();
+    //}
+    //assert (p == nullptr);
+    if (d_nv) d_nv->dec();
+    d_nv = nullptr;
 
     return *this;
   }
 
   RachelsSharedPtr& operator=(const RachelsSharedPtr& ptr) {
-    assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
-    assert (ptr.d_nv != NULL); // << "Expecting a non-NULL expression value on RHS!";
+    //assert (d_nv != NULL); // << "Expecting a non-NULL expression value!";
+    //if (d_nv == nullptr) {
+    //  d_nv = new PtrValue<T>();
+    //}
+    if (&ptr == nullptr) {
+      //assert (d_nv->d_rc > 0);
+      if (d_nv) d_nv->dec();
+      d_nv = nullptr;
+      return *this;
+    }
+    //assert (ptr.d_nv != NULL); // << "Expecting a non-NULL expression value on RHS!";
     if(__builtin_expect( ( d_nv != ptr.d_nv ), true )) {
-      assert (d_nv->d_rc > 0); // << "ptr reference count would be negative";
-      d_nv->dec();
+      //assert (d_nv->d_rc > 0); // << "ptr reference count would be negative";
+      if (d_nv) d_nv->dec();
       d_nv = ptr.d_nv;
 
       assert (d_nv->d_rc > 0); 
@@ -209,6 +227,7 @@ public:
    * number of owners, otherwise zero.
    */
   long use_count() const {
+    if (!d_nv) return 0;
     return d_nv->d_rc;
   }
 
@@ -216,7 +235,7 @@ public:
    * From shared_ptr. Replaces the object managed by this shared pointer.
    */
   void reset(T *ptr) {
-    d_nv->dec();
+    if (d_nv) d_nv->dec();
     d_nv = new PtrValue<T>(ptr);
   }
 
@@ -225,19 +244,19 @@ public:
    * pointed to by d_nv->d_ptr.
    */
   void reset() {
-    d_nv->dec();
-    d_nv = new PtrValue<T>();
+    if (d_nv) d_nv->dec();
+    d_nv = nullptr;
   }
 
   /**
    * Logical operators
    */
   operator bool() const {
-    return d_nv->d_ptr != 0;
+    return d_nv != nullptr && d_nv->d_ptr != nullptr;
   }
 
   bool operator!() const {
-    return !d_nv->d_ptr;
+    return !(d_nv) || !(d_nv->d_ptr);
   }
 
   /**

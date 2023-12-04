@@ -912,7 +912,8 @@ Term Cvc5Solver::make_term(Op op, const TermVec & terms) const
     for (auto t : terms)
     {
       //cterm = cast_ptr<Cvc5Term>(t);
-      Cvc5Term *cterm_ = dynamic_cast<Cvc5Term *>(t.get());
+      auto *t_p = t.get();
+      Cvc5Term *cterm_ = dynamic_cast<Cvc5Term *>(t_p);
       cterms.push_back(cterm_->get_cvc5_term());
     }
     if (op.prim_op == Forall || op.prim_op == Exists)

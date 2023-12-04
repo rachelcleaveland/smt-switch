@@ -101,10 +101,30 @@ class AbsTerm
 
 inline bool operator==(const Term & t1, const Term & t2)
 {
+  if (&t1 == nullptr)  {
+    return &t2 == nullptr || t2.nullPtr();
+  }
+  if (&t2 == nullptr) {
+    return &t1 == nullptr || t1.nullPtr();
+  }
+  if (t1.nullPtr()) {
+    return t2.nullPtr();
+  } 
+  if (t2.nullPtr()) {
+    return t1.nullPtr();
+  }
   return t1->compare(t2);
 }
 inline bool operator!=(const Term & t1, const Term & t2)
 {
+  if (&t1 == nullptr)  {
+    if (&t2 == nullptr) return false;
+    return !t2.nullPtr();
+  }
+  if (&t2 == nullptr) {
+    if (&t1 == nullptr) return false;
+    return !t1.nullPtr();
+  }
   if (t1.nullPtr()) {
     return !t2.nullPtr();
   }
