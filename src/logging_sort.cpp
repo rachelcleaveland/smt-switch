@@ -71,7 +71,7 @@ Sort make_uninterpreted_logging_sort(Sort s,
 
 Sort make_logging_sort(SortKind sk, Sort s)
 {
-  if (sk != BOOL && sk != INT && sk != REAL)
+  if (sk != BOOL && sk != INT && sk != REAL && sk != STRING)
   {
     throw IncorrectUsageException("Can't create sort from " + to_string(sk));
   }
@@ -167,7 +167,8 @@ bool LoggingSort::compare(const Sort & s) const
   {
     case BOOL:
     case INT:
-    case REAL: { return true;
+    case REAL:
+    case STRING: { return true;
     }
     case BV: { return get_width() == s->get_width();
     }

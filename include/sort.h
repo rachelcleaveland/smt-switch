@@ -39,6 +39,7 @@ enum SortKind
   BV,
   INT,
   REAL,
+  STRING,
   FUNCTION,
   UNINTERPRETED,
   // an uninterpreted sort constructor (has non-zero arity and takes subsort
