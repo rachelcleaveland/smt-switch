@@ -66,6 +66,7 @@ class GenericSolver : public AbsSmtSolver
                     std::string con,
                     std::string name) const override;
   void get_assertions(TermVec & out) override;
+  Term simplify(Term & t) override;
 
   /***************************************************************/
   /* methods from AbsSmtSolver that are implemented              */

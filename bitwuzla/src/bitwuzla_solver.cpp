@@ -202,6 +202,10 @@ void BzlaSolver::get_assertions(TermVec & out) {
       "Bitwuzla backend doesn't support get_assertions yet");
 }
 
+Term BzlaSolver::simplify(Term & t) {
+  throw NotImplementedException(
+      "Bitwuzla backend doesn't support simplify yet");
+}
 
 void BzlaSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {

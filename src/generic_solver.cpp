@@ -1147,6 +1147,12 @@ void GenericSolver::get_assertions(TermVec & out)
       "Generic solver does not yet support get-assertions");
 }
 
+Term GenericSolver::simplify(Term & t)
+{
+  throw NotImplementedException(
+    "Generic solver does not yet support simplify");
+}
+
 void GenericSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   // run get-unsat-assumptions command

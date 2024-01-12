@@ -200,9 +200,9 @@ public:
       if (d_nv) d_nv->dec();
       d_nv = ptr.d_nv;
 
-      assert (d_nv->d_rc > 0); 
-      d_nv->inc();
-
+      //assert (d_nv->d_rc > 0); 
+      //d_nv->inc();
+      if (d_nv) d_nv->inc();
     }
     return *this;
   }
@@ -236,7 +236,7 @@ public:
    */
   void reset(T *ptr) {
     if (d_nv) d_nv->dec();
-    d_nv = new PtrValue<T>(ptr);
+    if (ptr != nullptr) d_nv = new PtrValue<T>(ptr);
   }
 
   /**

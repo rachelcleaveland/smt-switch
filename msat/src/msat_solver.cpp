@@ -375,6 +375,12 @@ void MsatSolver::get_assertions(TermVec & out)
       "get_assertions not yet supported for MathSAT.");
 }
 
+Term MsatSolver::simplify(Term & out)
+{
+  throw NotImplementedException(
+      "simplify not yet supported for MathSAT.");
+}
+
 void MsatSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   initialize_env();

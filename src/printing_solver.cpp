@@ -211,6 +211,11 @@ void PrintingSolver::get_assertions(TermVec & out)
   wrapped_solver->get_assertions(out);
 }
 
+Term PrintingSolver::simplify(Term & t)
+{
+  return wrapped_solver->simplify(t);
+}
+
 void PrintingSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   (*out_stream) << "(" << GET_UNSAT_ASSUMPTIONS_STR << ")" << endl;

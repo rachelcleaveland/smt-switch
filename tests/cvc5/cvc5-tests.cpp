@@ -41,6 +41,7 @@ int main()
   assert(xnat->get_sort()->get_sort_kind() == INT);
   assert(s->make_term(Op(Int_To_BV, 8), xnat)->get_sort() == bvsort8);
 
+  /* // This behavior is now allowed in the version of smt-switch needed for SymCC
   try
   {
     Term x2 = s->make_symbol("x", bvsort8);
@@ -50,6 +51,7 @@ int main()
   {
     cout << "caught error with message: " << e.what() << endl;
   }
+  */
 
   Term y = s->make_symbol("y", bvsort8);
   Term z = s->make_symbol("z", bvsort8);

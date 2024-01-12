@@ -544,6 +544,11 @@ void LoggingSolver::get_assertions(TermVec & out)
   wrapped_solver->get_assertions(out);
 }
 
+Term LoggingSolver::simplify(Term & t)
+{
+  return wrapped_solver->simplify(t);
+}
+
 void LoggingSolver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   UnorderedTermSet underlying_core;

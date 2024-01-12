@@ -455,6 +455,13 @@ void Yices2Solver::get_assertions(TermVec & out)
   );
 }
 
+Term Yices2Solver::simplify(Term & t)
+{
+  throw NotImplementedException(
+      "simplify not yet supported for Yices."
+  );
+}
+
 void Yices2Solver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   term_vector_t ycore;

@@ -504,6 +504,13 @@ void Z3Solver::get_assertions(TermVec & out)
   }
 }
 
+Term Z3Solver::simplify(Term & t)
+{
+  Z3Term *zterm = dynamic_cast<Z3Term*>(t.get());
+  Z3_ast res = Z3_simplify(ctx,zterm->term);
+  return make_shared_term(to_expr(ctx, res), ctx);
+}
+
 void Z3Solver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   // in smt-switch, should throw exception if last query

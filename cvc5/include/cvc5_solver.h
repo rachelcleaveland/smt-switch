@@ -50,7 +50,7 @@ class Cvc5Solver : public AbsSmtSolver
   };
   Cvc5Solver(const Cvc5Solver &) = delete;
   Cvc5Solver & operator=(const Cvc5Solver &) = delete;
-  ~Cvc5Solver(){};
+  ~Cvc5Solver(){ exit(0); };
   void set_opt(const std::string option, const std::string value) override;
   void set_logic(const std::string logic) override;
   void assert_formula(const Term & t) override;
@@ -65,6 +65,7 @@ class Cvc5Solver : public AbsSmtSolver
   UnorderedTermMap get_array_values(const Term & arr,
                                     Term & out_const_base) const override;
   void get_assertions(TermVec & out) override;
+  Term simplify(Term & t) override;
   void get_unsat_assumptions(UnorderedTermSet & out) override;
   Sort make_sort(const std::string name, uint64_t arity) const override;
   Sort make_sort(SortKind sk) const override;

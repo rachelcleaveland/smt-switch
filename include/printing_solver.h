@@ -53,6 +53,7 @@ class PrintingSolver : public AbsSmtSolver
   UnorderedTermMap get_array_values(const Term & arr,
                                     Term & out_const_base) const override;
   void get_assertions(TermVec & out) override;
+  Term simplify(Term & t) override;
   void get_unsat_assumptions(UnorderedTermSet & out) override;
   void reset() override;
   void set_opt(const std::string option, const std::string value) override;

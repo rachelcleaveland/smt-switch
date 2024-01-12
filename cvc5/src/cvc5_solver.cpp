@@ -284,6 +284,7 @@ Term Cvc5Solver::make_term(std::string val,
     }
     else
     {
+      std::cout << "HERE 2" << std::endl;
       std::string msg = "Can't create constant with integer for sort ";
       msg += sort->to_string();
       throw IncorrectUsageException(msg.c_str());
@@ -518,6 +519,21 @@ void Cvc5Solver::get_assertions(TermVec & out)
   
 }
 
+Term Cvc5Solver::simplify(Term & t)
+{
+  try
+  {
+    Cvc5Term *cterm = dynamic_cast<Cvc5Term *>(t.get());
+    ::cvc5::Term res = solver.simplify(cterm->get_cvc5_term());
+    return make_shared_term(res);
+  }
+  catch(const std::exception& e)
+  {
+    throw InternalSolverException(e.what());
+  }
+  
+}
+
 void Cvc5Solver::get_unsat_assumptions(UnorderedTermSet & out)
 {
   Term f;
@@ -738,12 +754,13 @@ Term Cvc5Solver::make_symbol(const std::string name, const Sort & sort)
 {
   // check that name is available
   // to make cvc5 behave the same as other solvers
+  /*
   if (symbol_table.find(name) != symbol_table.end())
   {
     throw IncorrectUsageException("Symbol name " + name
                                   + " has already been used.");
   }
-
+  */
   try
   {
     Cvc5Sort *csort = dynamic_cast<Cvc5Sort*>(sort.get());
