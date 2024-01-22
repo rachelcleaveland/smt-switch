@@ -107,6 +107,7 @@ const std::unordered_map<PrimOp, ::cvc5::Kind> primop2kind(
       { StrPrefixof, ::cvc5::Kind::STRING_PREFIX },
       { StrSuffixof, ::cvc5::Kind::STRING_SUFFIX },
       { StrIsDigit, ::cvc5::Kind::STRING_IS_DIGIT },
+      { StrFromCode, ::cvc5::Kind::STRING_FROM_CODE },
       // Indexed Op
       { Select, ::cvc5::Kind::SELECT },
       { Store, ::cvc5::Kind::STORE },

@@ -103,6 +103,11 @@ int main()
   s->assert_formula(s->make_term(StrIsDigit, str1));
   s->assert_formula(s->make_term(Not, s->make_term(StrIsDigit, A)));
   s->assert_formula(s->make_term(Not, s->make_term(StrIsDigit, str10)));
+  //StrFromCode
+  Term i_to_s = s->make_term(97, intsort);
+  Term intx = s->make_term(StrFromCode, i_to_s);
+  Term s_from_i = s->make_term("a", false, strsort);
+  s->assert_formula(s->make_term(Equal, intx, s_from_i));
 
   Result r = s->check_sat();
   assert(r.is_sat());

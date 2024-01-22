@@ -112,6 +112,7 @@ enum PrimOp
   StrPrefixof,
   StrSuffixof,
   StrIsDigit,
+  StrFromCode,
   /* Array Theory */
   Select,
   Store,

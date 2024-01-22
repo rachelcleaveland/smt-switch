@@ -98,6 +98,7 @@ const std::unordered_map<PrimOp, std::string> primop2str(
       { StrPrefixof, "str.prefixof"},
       { StrSuffixof, "str.suffixof"},
       { StrIsDigit, "str.is_digit"},
+      { StrFromCode, "str.from_code"},
       { Select, "select" },
       { Store, "store" },
       { Forall, "forall" },
@@ -193,6 +194,7 @@ const std::unordered_map<PrimOp, std::pair<size_t, size_t>> primop2arity(
       { StrPrefixof, { 2, 2} },
       { StrSuffixof, { 2, 2} },
       { StrIsDigit, { 1, 1} },
+      { StrFromCode, { 1, 1} },
       { Select, { 2, 2 } },
       { Store, { 3, 3 } },
       // to make term traversal easier considering the differences
