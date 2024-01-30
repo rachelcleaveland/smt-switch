@@ -112,7 +112,9 @@ enum PrimOp
   StrPrefixof,
   StrSuffixof,
   StrIsDigit,
+  // String Conversion
   StrFromCode,
+  StrToCode,
   /* Array Theory */
   Select,
   Store,

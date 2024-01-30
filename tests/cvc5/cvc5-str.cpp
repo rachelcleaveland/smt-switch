@@ -108,6 +108,9 @@ int main()
   Term intx = s->make_term(StrFromCode, i_to_s);
   Term s_from_i = s->make_term("a", false, strsort);
   s->assert_formula(s->make_term(Equal, intx, s_from_i));
+  //StrToCode
+  Term i_from_s = s->make_term(StrToCode,intx);
+  s->assert_formula(s->make_term(Equal,i_to_s,i_from_s));
 
   Result r = s->check_sat();
   assert(r.is_sat());

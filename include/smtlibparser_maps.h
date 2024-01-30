@@ -112,6 +112,7 @@ const std::unordered_map<std::string, std::unordered_map<std::string, PrimOp>>
               { "str.suffixof", StrSuffixof },
               { "str.is_digit", StrIsDigit }, 
               { "str.from_code", StrFromCode },
+              { "str.to_code", StrToCode },
             } },
           // ArraysEx
           { "A",
