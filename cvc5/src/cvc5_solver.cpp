@@ -107,8 +107,12 @@ const std::unordered_map<PrimOp, ::cvc5::Kind> primop2kind(
       { StrPrefixof, ::cvc5::Kind::STRING_PREFIX },
       { StrSuffixof, ::cvc5::Kind::STRING_SUFFIX },
       { StrIsDigit, ::cvc5::Kind::STRING_IS_DIGIT },
+      { StrToRe, ::cvc5::Kind::STRING_TO_REGEXP },
+      { StrInRe, ::cvc5::Kind::STRING_IN_REGEXP },
       { StrFromCode, ::cvc5::Kind::STRING_FROM_CODE },
       { StrToCode, ::cvc5::Kind::STRING_TO_CODE },
+      // Regular Expression Op
+      { ReStar, ::cvc5::Kind::REGEXP_STAR },
       // Indexed Op
       { Select, ::cvc5::Kind::SELECT },
       { Store, ::cvc5::Kind::STORE },
@@ -585,6 +589,10 @@ Sort Cvc5Solver::make_sort(SortKind sk) const
     {
       return make_shared_sort(solver.getStringSort());
     }    
+    else if (sk == REGEXP)
+    {
+      return make_shared_sort(solver.getRegExpSort());
+    }
     else
     {
       std::string msg("Can't create sort with sort constructor ");

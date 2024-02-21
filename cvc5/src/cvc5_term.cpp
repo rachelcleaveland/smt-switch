@@ -118,8 +118,12 @@ const std::unordered_map<::cvc5::Kind, PrimOp> kind2primop(
       { ::cvc5::Kind::STRING_PREFIX, StrPrefixof },
       { ::cvc5::Kind::STRING_SUFFIX, StrSuffixof },
       { ::cvc5::Kind::STRING_IS_DIGIT, StrIsDigit },
+      { ::cvc5::Kind::STRING_TO_REGEXP, StrToRe },
+      { ::cvc5::Kind::STRING_IN_REGEXP, StrInRe },
       { ::cvc5::Kind::STRING_FROM_CODE, StrFromCode },
       { ::cvc5::Kind::STRING_TO_CODE, StrToCode },
+      // Regular Expression Op
+      { ::cvc5::Kind::REGEXP_STAR, ReStar },
       // Indexed Op
       { ::cvc5::Kind::INT_TO_BITVECTOR, Int_To_BV },
       { ::cvc5::Kind::SELECT, Select },

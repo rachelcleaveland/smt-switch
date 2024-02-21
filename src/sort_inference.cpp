@@ -106,8 +106,11 @@ const std::unordered_map<PrimOp, std::function<bool(const SortVec & sorts)>>
                           { StrPrefixof, string_sorts },
                           { StrSuffixof, string_sorts },
                           { StrIsDigit, string_sorts },
+                          { StrToRe, string_sorts },
+                          { StrInRe, check_inre_sorts },
                           { StrFromCode, int_sorts },
                           { StrToCode, string_sorts },
+                          { ReStar, regexp_sorts },
                           { Select, check_select_sorts },
                           { Store, check_store_sorts },
                           { Forall, check_quantifier_sorts },
@@ -203,8 +206,11 @@ const std::unordered_map<
         { StrPrefixof, bool_sort },
         { StrSuffixof, bool_sort },
         { StrIsDigit, bool_sort },
+        { StrToRe, regexp_sort },
+        { StrInRe, bool_sort },
         { StrFromCode, string_sort },
         { StrToCode, int_sort },
+        { ReStar, regexp_sort },
         { Select, select_sort },
         { Store, store_sort },
         { Forall, bool_sort },
@@ -492,6 +498,28 @@ bool check_substr_sorts(const SortVec & sorts)
   return true;
 }
 
+bool check_inre_sorts(const SortVec & sorts)
+{
+  assert(sorts.size());
+  if (sorts.size() != 2)
+  {
+    return false;
+  }
+
+  Sort strsort = sorts[0];
+  if (strsort->get_sort_kind() != STRING)
+  {
+    return false;
+  }
+
+  if (sorts[1]->get_sort_kind() != REGEXP)
+  {
+    return false;
+  }
+  
+  return true;
+}
+
 bool check_charat_sorts(const SortVec & sorts)
 {
   assert(sorts.size());
@@ -571,6 +599,11 @@ bool string_sorts(const SortVec & sorts)
   return check_sortkind_matches(STRING, sorts);
 };
 
+bool regexp_sorts(const SortVec & sorts)
+{
+  return check_sortkind_matches(REGEXP, sorts);
+};
+
 bool arithmetic_sorts(const SortVec & sorts)
 {
   return check_one_of_sortkinds({ INT, REAL }, sorts);
@@ -620,6 +653,10 @@ Sort string_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts)
   return solver->make_sort(STRING);
 }
 
+Sort regexp_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts)
+{
+  return solver->make_sort(REGEXP);
+}
 
 Sort ite_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts)
 {

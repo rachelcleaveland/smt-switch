@@ -170,6 +170,13 @@ bool check_store_sorts(const SortVec & sorts);
  */
 bool check_substr_sorts(const SortVec & sorts);
 
+/** Checks if the sorts are well-sorted for a in re operator
+ *  @param sorts the vector of sorts
+ *  @param returns true iff the first sort is the string sort
+ *         and the second is the regexp sort
+ */
+bool check_inre_sorts(const SortVec & sorts);
+
 /** Checks if the sorts are well-sorted for a char at operator
  *  @param sorts the vector of sorts
  *  @param returns true iff the first sort is the string sort
@@ -196,6 +203,8 @@ bool int_sorts(const SortVec & sorts);
 
 bool string_sorts(const SortVec & sorts);
 
+bool regexp_sorts(const SortVec & sorts);
+
 bool arithmetic_sorts(const SortVec & sorts);
 
 bool array_sorts(const SortVec & sorts);
@@ -215,6 +224,8 @@ Sort real_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts);
 Sort int_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts);
 
 Sort string_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts);
+
+Sort regexp_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts);
 
 Sort ite_sort(Op op, const AbsSmtSolver * solver, const SortVec & sorts);
 

@@ -40,6 +40,7 @@ enum SortKind
   INT,
   REAL,
   STRING,
+  REGEXP,
   FUNCTION,
   UNINTERPRETED,
   // an uninterpreted sort constructor (has non-zero arity and takes subsort

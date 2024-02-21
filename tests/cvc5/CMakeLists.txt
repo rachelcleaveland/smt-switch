@@ -21,6 +21,7 @@ switch_add_cvc5_test(cvc5-simplify)
 switch_add_cvc5_test(cvc5-transfer)
 switch_add_cvc5_test(cvc5-neg-numbers)
 switch_add_cvc5_test(cvc5-printing)
+switch_add_cvc5_test(cvc5-regexp)
 switch_add_cvc5_test(cvc5-str)
 
 # Google Test
