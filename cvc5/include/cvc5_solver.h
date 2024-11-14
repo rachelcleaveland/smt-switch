@@ -50,7 +50,7 @@ class Cvc5Solver : public AbsSmtSolver
   };
   Cvc5Solver(const Cvc5Solver &) = delete;
   Cvc5Solver & operator=(const Cvc5Solver &) = delete;
-  ~Cvc5Solver(){ exit(0); };
+  ~Cvc5Solver(){ };
   void set_opt(const std::string option, const std::string value) override;
   void set_logic(const std::string logic) override;
   void assert_formula(const Term & t) override;
