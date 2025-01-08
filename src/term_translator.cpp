@@ -590,6 +590,17 @@ Term TermTranslator::cast_op(Op op, const TermVec & terms) const
     }
     return solver->make_term(Apply, casted_children);
   }
+  // case 10 -- special case for PLUS (rachel -- symcc)
+  else if (po == Plus) {
+    Sort intsort = solver->make_sort(INT);
+    Term nested_pluses = cast_term(terms[0],intsort);
+    assert(terms.size() >= 2);
+    for (size_t i = 1; i < terms.size(); ++i)
+    {
+      nested_pluses = (solver->make_term(Plus,nested_pluses,cast_term(terms[i],intsort)));
+    }
+    return nested_pluses;    
+  }
   // default case
   else
   {

@@ -127,6 +127,7 @@ class Cvc5Solver : public AbsSmtSolver
 
   // helpers
   ::cvc5::Op make_cvc5_op(Op op) const;
+  //std::tuple<Op,const TermVec,Term> rachels_simplifier(Op op, const TermVec & children);
 
   // getters for solver-specific objects
   // for interacting with third-party cvc5-specific software

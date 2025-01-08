@@ -131,7 +131,7 @@ void Cvc5Solver::set_opt(const std::string option, const std::string value)
   {
     cvc5option = "tlimit-per";
     // convert to milliseconds
-    cvc5value = std::to_string(stoi(value) * 1000);
+    cvc5value = std::to_string(stoi(value));
   }
 
   try
@@ -1002,6 +1002,11 @@ Term Cvc5Solver::make_term(Op op, const TermVec & terms) const
 {
   try
   {
+    // Op op1;
+    // TermVec terms1;
+    // Term t_ret_early;
+    // std::tie(op1,terms1,t_ret_early) = rachels_simplifier(op,terms);
+
     std::vector<::cvc5::Term> cterms;
     cterms.reserve(terms.size());
     RachelsSharedPtr<AbsTerm> cterm;
@@ -1134,6 +1139,109 @@ void Cvc5Solver::dump_smt2(std::string filename) const
         "operators with more than two indices");
   }
 }
+/*
+  std::tuple<Op,const TermVec,Term> Cvc5Solver::rachels_simplifier(Op op, const TermVec & children)
+  {
+  // Ops used: Gt, Ge, Plus, Minus, StrConcat
+  if (op == StrSubstr) {
+    assert(children.size() == 3 && "Invalid number of children.\n");
+
+    Term offset = children[1];
+    Term len = children[2];
+
+    Term s = children[0];
+    Term internal_offset = offset;
+    
+    if (s->get_op() == StrConcat) {
+
+      TermVec s_children;
+
+      TermIter start = s->begin();
+      TermIter end = s->end();
+
+      Sort int_sort = make_sort(INT);
+      Term prior_len = make_term(0,int_sort);
+      Term removed_len = make_term(0,int_sort);
+
+      while (start != end) {
+        Term child = *start;
+
+        Term child_max_idx = make_term(Plus,prior_len,make_term(StrLen,child));
+
+        // Cut off s_children that preceed the starting offset
+        Term check_formula = make_term(Ge,child_max_idx,internal_offset);
+
+        set_opt("time-limit", "1");
+        push(1);
+        assert_formula(check_formula);
+        Result sat = check_sat();
+        pop(1);
+        set_opt("time-limit", "0");
+
+        if (sat == UNSAT) {
+          prior_len = child_max_idx;
+          removed_len = child_max_idx;
+          start++;
+          continue;
+        }
+
+        // Cut off s_children after the substring region
+        check_formula = make_term(Gt,
+          make_term(Plus,internal_offset,len),
+          child_max_idx);
+
+        set_opt("time-limit", "1");
+        push(1);
+        assert_formula(check_formula);
+        sat = check_sat();
+        pop(1);
+        set_opt("time-limit", "0");
+
+        if (sat == UNSAT) {
+          s_children.push_back(child);
+          break;
+        }
+
+        prior_len = child_max_idx;
+        s_children.push_back(child);
+        start++;
+      }
+
+      internal_offset = make_term(Minus,internal_offset,removed_len);
+
+      internal_offset = simplify(internal_offset);
+
+      if (s_children.size() == 1) {
+        return std::make_tuple(op,children,s_children[0]);
+      } else {
+        s = make_term(StrConcat,s_children);
+      }
+      // Term child = *(s->begin());
+
+      // Term check_formula = 
+      //   _sym_build_int_gt(
+      //     _sym_build_int_plus(offset,len),
+      //     _sym_build_string_len(child)
+      //   );
+
+      // Result sat = check_sat(check_formula);
+
+      // if (sat == UNSAT) {
+      //   s = child;
+      // }
+    }
+
+    TermVec new_children;
+    
+    new_children[0] = s;
+    new_children[1] = internal_offset;
+    new_children[2] = len;
+
+  }
+
+  return std::make_tuple(op,children,nullptr);
+}
+*/
 
 /* end Cvc5Solver implementation */
 
