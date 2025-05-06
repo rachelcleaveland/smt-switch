@@ -167,6 +167,8 @@ SortKind Cvc5Sort::get_sort_kind() const
   else if (sort.isDatatypeTester())
   {
     return TESTER;
+  } else if (sort.isRegExp()) {
+    return REGEXP;
   }
   else
   {
